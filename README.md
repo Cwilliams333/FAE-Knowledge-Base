@@ -14,8 +14,8 @@ A simple, searchable knowledge base for engineering teams using Elasticsearch an
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/engineering-knowledge-base.git
-cd engineering-knowledge-base
+git clone https://github.com/yourusername/FAE-knowledge-base.git
+cd FAE-knowledge-base
 ```
 
 ### 2. Set up environment
@@ -41,7 +41,7 @@ Open http://localhost:5000 in your browser
 
 ## Project Structure
 ```
-engineering-knowledge-base/
+FAE-knowledge-base/
 ├── docker-compose.yml      # Docker orchestration
 ├── Dockerfile             # Web app container
 ├── app.py                # Flask web application
