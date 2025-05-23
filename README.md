@@ -1,4 +1,4 @@
-# Engineering Knowledge Base 🔍
+# FAE Knowledge Base 🔍
 
 A simple, searchable knowledge base for engineering teams using Elasticsearch and Flask.
 
