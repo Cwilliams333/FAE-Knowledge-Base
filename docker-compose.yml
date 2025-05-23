@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: elasticsearch:8.9.0
+    container_name: es-knowledge-base
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.enrollment.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-changeme123}
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - knowledge-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -k https://elastic:${ELASTIC_PASSWORD:-changeme123}@localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  web:
+    build: .
+    container_name: kb-web
+    environment:
+      - ES_HOST=https://elasticsearch:9200
+      - ES_USER=elastic
+      - ES_PASSWORD=${ELASTIC_PASSWORD:-changeme123}
+      - FLASK_ENV=production
+    ports:
+      - "5000:5000"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./documents:/app/documents
+    networks:
+      - knowledge-net
+    restart: unless-stopped
+
+volumes:
+  es_data:
+    driver: local
+
+networks:
+  knowledge-net:
+    driver: bridge
