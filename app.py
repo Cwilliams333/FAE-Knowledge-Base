@@ -54,7 +54,7 @@ HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Engineering Knowledge Base</title>
+    <title>FAE Knowledge Base</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; 
@@ -155,7 +155,7 @@ HTML_TEMPLATE = '''
     </style>
 </head>
 <body>
-    <h1>🔍 Engineering Knowledge Base</h1>
+    <h1>🔍 FAE Knowledge Base</h1>
     
     <div class="search-box">
         <div class="upload-section">
