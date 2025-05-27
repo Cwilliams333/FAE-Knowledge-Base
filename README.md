@@ -7,11 +7,11 @@ A simple, searchable knowledge base for engineering teams using Elasticsearch an
 
 ## Features
 
-- 📄 **Markdown Support** - Beautiful rendering of markdown documents
-- 🔍 **Full-Text Search** - Powerful search across all your documentation
+- 📄 **Markdown Support** - Rendering of markdown documents
+- 🔍 **Full-Text Search** - Search across all ingested documentation
 - 🐳 **Docker Ready** - Easy deployment with Docker Compose
 - 📁 **Auto-Indexing** - Automatically indexes new documents
-- 🎨 **Clean UI** - Simple, Google-like search interface
+- 🎨 **Clean UI** - Simple search interface
 
 ## Quick Start
 
