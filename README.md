@@ -2,6 +2,9 @@
 
 A simple, searchable knowledge base for engineering teams using Elasticsearch and Flask.
 
+![MockUpSearch](https://github.com/user-attachments/assets/eabb573d-3491-4a1d-809b-91a2aec61091)
+
+
 ## Features
 
 - 📄 **Markdown Support** - Beautiful rendering of markdown documents
