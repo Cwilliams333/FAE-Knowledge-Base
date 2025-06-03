@@ -17,7 +17,7 @@ A simple, searchable knowledge base for engineering teams using Elasticsearch an
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/FAE-knowledge-base.git
+git clone https://github.com/Cwilliams333/FAE-knowledge-base.git
 cd FAE-knowledge-base
 ```
 
