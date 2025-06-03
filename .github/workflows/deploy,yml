@@ -31,6 +31,9 @@ jobs:
 
   build:
     needs: test
+    permissions:
+      contents: read
+      packages: write  # Required for pushing to GHCR
     runs-on: ubuntu-latest
     
     steps:
