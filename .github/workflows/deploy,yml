@@ -42,6 +42,11 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t knowledge-base:latest .
+
+    - name: Push Docker image to GHCR
+        run: |
+          IMAGE_NAME=ghcr.io/cwilliams333/fae-knowledge-base:latest
+          docker push $IMAGE_NAME
     
     - name: Test Docker Compose
       run: |
