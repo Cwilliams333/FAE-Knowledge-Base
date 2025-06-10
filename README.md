@@ -9,7 +9,7 @@ A simple, searchable knowledge base for engineering teams using Elasticsearch an
 - 📄 **Markdown Support** - Full rendering of markdown documents with syntax highlighting
 - 🔍 **Full-Text Search** - Powerful search across all documentation with highlighting
 - 🚀 **One-Command Setup** - Auto-indexing and startup with single Docker command
-- 📁 **Auto-Indexing** - Automatically indexes documents on startup
+- 📁 **Auto-Indexing** - Automatically indexes documents on container startup
 - 🎨 **Clean UI** - Modern, responsive search interface
 - 🐳 **Docker Ready** - Complete containerized deployment
 - 🔓 **No Authentication** - Simple, frictionless setup for internal teams
@@ -54,6 +54,49 @@ FAE-knowledge-base/
 └── README.md              # This file
 ```
 
+## 📖 Usage
+
+### Adding New Documents
+
+After the initial setup, you can add new documents using either method:
+
+#### Method 1: Manual Indexing (Recommended) ⚡
+```bash
+# Add files to documents folder
+cp new-file.md documents/
+
+# Index new documents immediately
+docker exec kb-web python ingest.py
+```
+✅ **Fast & reliable** - New documents appear in search immediately
+
+#### Method 2: Full Rebuild (Complete Auto-Indexing Test) 🔄
+```bash
+# Add files to documents folder  
+cp new-file.md documents/
+
+# Rebuild containers to trigger auto-indexing
+docker-compose down && docker-compose up -d --build
+```
+✅ **Tests full auto-indexing** - Takes 60 seconds but validates entire system
+
+#### ⚠️ Why `docker-compose restart web` doesn't work
+- **Restart** = stops and starts existing container
+- **Auto-indexing only runs on container creation**, not restart
+- Use **Method 1** (manual) for daily use or **Method 2** (rebuild) for testing
+
+### Searching
+- Type keywords in the search box
+- Click results to view formatted documents  
+- Use "View Raw" to see original markdown
+- Search supports fuzzy matching and highlighting
+
+### Supported File Types
+- `.md` - Markdown files (primary)
+- `.txt` - Plain text files
+- `.csv` - CSV files 
+- `.json` - JSON files
+
 ## ⚙️ Configuration
 
 ### Environment Variables (.env)
@@ -73,25 +116,6 @@ DOCUMENTS_DIR=/app/documents
 WATCH_MODE=false
 ```
 
-## 📖 Usage
-
-### Adding Documents
-1. Drop markdown files into the `documents/` folder
-2. Restart the service: `docker-compose restart web`
-3. Documents are automatically re-indexed and searchable
-
-### Searching
-- Type keywords in the search box
-- Click results to view formatted documents  
-- Use "View Raw" to see original markdown
-- Search supports fuzzy matching and highlighting
-
-### Supported File Types
-- `.md` - Markdown files (primary)
-- `.txt` - Plain text files
-- `.csv` - CSV files 
-- `.json` - JSON files
-
 ## 🛠️ Development
 
 ### Local Development (without Docker)
@@ -109,13 +133,15 @@ python ingest.py
 python app.py
 ```
 
-### Adding New Documents
+### Development Workflow
 ```bash
-# Add files to documents folder
-cp new-file.md documents/
+# Add new documents
+cp new-docs/*.md documents/
 
-# Restart to re-index
-docker-compose restart web
+# Quick indexing for development
+docker exec kb-web python ingest.py
+
+# View immediately at http://localhost:5000
 ```
 
 ## 🏗️ Architecture
@@ -140,79 +166,166 @@ docker-compose restart web
 - **Document Stats**: http://localhost:5000/stats
 - **Logs**: `docker-compose logs -f web`
 
-## 🐛 Troubleshooting
-
-### Documents Not Appearing
-- Check if files are in `documents/` folder
-- Restart web service: `docker-compose restart web`
-- Check logs: `docker-compose logs web`
-
-### Search Not Working
-- Verify Elasticsearch is running: `curl http://localhost:9200`
-- Check index exists: `curl http://localhost:9200/knowledge_base/_stats`
-- Restart everything: `docker-compose restart`
-
-### Web Interface Not Loading
-- Ensure port 5000 is not in use
-- Check container status: `docker-compose ps`
-- View logs: `docker-compose logs -f web`
-
 ## 🔄 Common Commands
 
+### Startup & Management
 ```bash
-# Start everything
+# Initial setup - starts everything with auto-indexing
 docker-compose up -d --build
 
-# View logs
-docker-compose logs -f
+# Check running status
+docker-compose ps
 
-# Restart after adding documents  
-docker-compose restart web
+# View real-time logs
+docker-compose logs -f web
 
 # Stop everything
 docker-compose down
+```
 
-# Clean restart (removes data)
+### Document Management
+```bash
+# Add new documents (recommended method)
+cp new-file.md documents/
+docker exec kb-web python ingest.py
+
+# Check document count
+curl http://localhost:5000/stats
+
+# Test search
+curl -X POST http://localhost:5000/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"your search term"}'
+```
+
+### Troubleshooting
+```bash
+# Clean restart (removes all data)
 docker-compose down -v && docker-compose up -d --build
 
-# Check status
-docker-compose ps
+# Force rebuild containers
+docker-compose build --no-cache
+docker-compose up -d
+
+# Check Elasticsearch directly
+curl http://localhost:9200
+curl http://localhost:9200/knowledge_base/_stats
 ```
+
+## 🐛 Troubleshooting
+
+### Documents Not Appearing
+1. **Check documents folder**: Ensure `.md` files are in `documents/` directory
+2. **Manual re-index**: Run `docker exec kb-web python ingest.py`
+3. **Check logs**: `docker-compose logs web | grep -i "index\|document"`
+4. **Verify stats**: Visit http://localhost:5000/stats
+
+### Search Not Working
+1. **Test Elasticsearch**: `curl http://localhost:9200` (should return cluster info)
+2. **Check index**: `curl http://localhost:9200/knowledge_base/_stats`
+3. **Restart services**: `docker-compose restart`
+4. **Check browser console**: Look for JavaScript errors
+
+### Web Interface Not Loading
+1. **Port conflict**: Ensure port 5000 is available (`netstat -an | grep 5000`)
+2. **Container status**: `docker-compose ps` (web should show "Up")
+3. **Container logs**: `docker-compose logs web`
+4. **Health check**: `curl http://localhost:5000/health`
+
+### Auto-Indexing Not Working
+1. **Check startup.sh**: `docker exec kb-web cat startup.sh`
+2. **Container startup logs**: `docker logs kb-web | head -20`
+3. **Manual test**: `docker exec kb-web bash startup.sh`
+4. **Use manual indexing**: `docker exec kb-web python ingest.py`
 
 ## 📝 What Changed from Original
 
 ### Removed Complexity
 - ❌ **No Kibana** - Custom Flask UI only
 - ❌ **No Authentication** - No passwords or user management  
-- ❌ **No Manual Steps** - Everything automated
+- ❌ **No Manual Multi-Step Setup** - Everything automated
 
 ### Added Simplicity  
 - ✅ **One Command Setup** - `docker-compose up -d --build`
-- ✅ **Auto-Indexing** - Documents indexed automatically on startup
+- ✅ **Auto-Indexing on Startup** - Documents indexed automatically on container creation
+- ✅ **Manual Indexing Option** - `docker exec kb-web python ingest.py` for quick updates
 - ✅ **Simplified Configuration** - Minimal environment variables
 - ✅ **Better Error Handling** - Robust connection and search handling
 
 ### Developer Experience
-- **Before**: Multi-step setup, user creation, manual indexing
-- **After**: Single command, automatic everything, instant search
+- **Before**: Multi-step setup, user creation, manual indexing, complex authentication
+- **After**: Single command, automatic indexing, instant search, zero authentication
 
 ## 🚀 Deployment
 
-For production deployment:
+### Production Setup
+1. **Update environment**: Set `FLASK_ENV=production` in `.env`
+2. **Resource limits**: Configure memory/CPU limits in docker-compose.yml
+3. **Persistent storage**: Ensure `es_data` volume is properly backed up
+4. **Reverse proxy**: Use nginx/Apache for SSL termination and domain routing
+5. **Monitoring**: Set up log aggregation and health monitoring
 
-1. Set `FLASK_ENV=production` in `.env`
-2. Configure proper resource limits in docker-compose.yml
-3. Set up persistent volumes backup
-4. Consider reverse proxy for SSL/domain
+### Production Commands
+```bash
+# Production startup
+FLASK_ENV=production docker-compose up -d --build
+
+# Monitor in production
+docker-compose logs -f --tail=100
+
+# Backup data volume
+docker run --rm -v fae-knowledge-base_es_data:/data -v $(pwd):/backup ubuntu tar czf /backup/es-backup.tar.gz /data
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+3. Test your changes: `docker-compose up -d --build`
+4. Commit changes: `git commit -m 'Add amazing feature'`
+5. Push to branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
+
+## 🔍 API Reference
+
+### Search API
+```bash
+# Search documents
+POST /search
+Content-Type: application/json
+{
+  "query": "search terms"
+}
+
+# Response
+{
+  "total": 5,
+  "results": [
+    {
+      "filename": "document.md",
+      "content": "...",
+      "highlight": "highlighted content...",
+      "score": 1.234
+    }
+  ]
+}
+```
+
+### Health & Stats
+```bash
+# Health check
+GET /health
+# Returns: {"status": "healthy", "elasticsearch": "connected"}
+
+# Document statistics  
+GET /stats
+# Returns: {"count": 42}
+```
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+**🎯 Ready to get started?** Run `docker-compose up -d --build` and visit http://localhost:5000!
