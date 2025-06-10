@@ -28,8 +28,8 @@ Thumbs.db
 # Elasticsearch data
 es_data/
 
-# Documents (if you want to keep them private)
-# documents/
+# Documents (keep them private - they contain sensitive information)
+documents/
 
 # Logs
 *.log
