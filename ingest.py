@@ -10,9 +10,9 @@ import hashlib
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuration from environment
-ES_HOST = os.getenv('ES_HOST', 'https://localhost:9200')
-ES_USER = os.getenv('ES_USER', 'elastic')
-ES_PASSWORD = os.getenv('ES_PASSWORD', 'changeme123')
+ES_HOST = os.getenv('ES_HOST', 'http://localhost:9200')
+ES_USER = os.getenv('ES_USER', '')  # Empty string if not set
+ES_PASSWORD = os.getenv('ES_PASSWORD', '')  # Empty string if not set
 INDEX_NAME = os.getenv('INDEX_NAME', 'knowledge_base')
 DOCUMENTS_DIR = os.getenv('DOCUMENTS_DIR', '/app/documents')
 
@@ -20,17 +20,27 @@ def connect_elasticsearch():
     """Connect to Elasticsearch with retry logic"""
     for i in range(30):
         try:
-            es = Elasticsearch(
-                [ES_HOST],
-                basic_auth=(ES_USER, ES_PASSWORD),
-                verify_certs=False,
-                ssl_show_warn=False
-            )
+            # Check if we need authentication
+            if ES_USER and ES_PASSWORD:
+                es = Elasticsearch(
+                    [ES_HOST],
+                    basic_auth=(ES_USER, ES_PASSWORD),
+                    verify_certs=False,
+                    ssl_show_warn=False
+                )
+            else:
+                # No authentication needed
+                es = Elasticsearch(
+                    [ES_HOST],
+                    verify_certs=False,
+                    ssl_show_warn=False
+                )
+            
             if es.ping():
                 print("✓ Connected to Elasticsearch")
                 return es
         except Exception as e:
-            print(f"Waiting for Elasticsearch... ({i+1}/30)")
+            print(f"Waiting for Elasticsearch... ({i+1}/30): {str(e)[:50]}")
             time.sleep(2)
     raise Exception("Failed to connect to Elasticsearch")
 
@@ -64,20 +74,24 @@ def should_reindex(es, filepath, file_hash):
     """Check if file needs to be reindexed"""
     filename = os.path.basename(filepath)
     
-    # Check if file exists in index with same hash
-    result = es.search(
-        index=INDEX_NAME,
-        query={
-            "bool": {
-                "must": [
-                    {"term": {"filename": filename}},
-                    {"term": {"file_hash": file_hash}}
-                ]
+    try:
+        # Check if file exists in index with same hash
+        result = es.search(
+            index=INDEX_NAME,
+            query={
+                "bool": {
+                    "must": [
+                        {"term": {"filename": filename}},
+                        {"term": {"file_hash": file_hash}}
+                    ]
+                }
             }
-        }
-    )
-    
-    return result['hits']['total']['value'] == 0
+        )
+        
+        return result['hits']['total']['value'] == 0
+    except Exception as e:
+        print(f"Error checking if file should be reindexed: {e}")
+        return True  # Reindex on error
 
 def index_documents(es):
     """Index all documents in the documents directory"""
@@ -135,7 +149,10 @@ def index_documents(es):
     
     # Refresh index
     if indexed > 0:
-        es.indices.refresh(index=INDEX_NAME)
+        try:
+            es.indices.refresh(index=INDEX_NAME)
+        except Exception as e:
+            print(f"Warning: Could not refresh index: {e}")
     
     print(f"\n{'='*50}")
     print(f"Indexing complete!")

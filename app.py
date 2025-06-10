@@ -17,9 +17,9 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration from environment variables
-ES_HOST = os.getenv('ES_HOST', 'https://localhost:9200')
-ES_USER = os.getenv('ES_USER', 'elastic')
-ES_PASSWORD = os.getenv('ES_PASSWORD', 'changeme123')
+ES_HOST = os.getenv('ES_HOST', 'http://localhost:9200')
+ES_USER = os.getenv('ES_USER', '')  # Empty string if not set
+ES_PASSWORD = os.getenv('ES_PASSWORD', '')  # Empty string if not set
 INDEX_NAME = os.getenv('INDEX_NAME', 'knowledge_base')
 
 # Wait for Elasticsearch to be ready
@@ -29,12 +29,22 @@ def wait_for_elasticsearch(max_retries=30):
     
     for i in range(max_retries):
         try:
-            es = Elasticsearch(
-                [ES_HOST],
-                basic_auth=(ES_USER, ES_PASSWORD),
-                verify_certs=False,
-                ssl_show_warn=False
-            )
+            # Check if we need authentication
+            if ES_USER and ES_PASSWORD:
+                es = Elasticsearch(
+                    [ES_HOST],
+                    basic_auth=(ES_USER, ES_PASSWORD),
+                    verify_certs=False,
+                    ssl_show_warn=False
+                )
+            else:
+                # No authentication needed
+                es = Elasticsearch(
+                    [ES_HOST],
+                    verify_certs=False,
+                    ssl_show_warn=False
+                )
+            
             if es.ping():
                 print("✓ Elasticsearch is ready!")
                 return es
@@ -46,9 +56,6 @@ def wait_for_elasticsearch(max_retries=30):
 
 # Initialize Elasticsearch connection
 es = wait_for_elasticsearch()
-
-# Your existing HTML templates here (HTML_TEMPLATE and DOC_TEMPLATE)
-# [Previous template code remains the same]
 
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
@@ -386,53 +393,56 @@ DOC_TEMPLATE = '''
 </html>
 '''
 
-# Routes remain the same as your current implementation
 @app.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE)
 
 @app.route('/search', methods=['POST'])
 def search():
-    query = request.json.get('query', '')
-    
-    result = es.search(
-        index=INDEX_NAME,
-        query={
-            "multi_match": {
-                "query": query,
-                "fields": ["content", "filename^2"],
-                "fuzziness": "AUTO"
-            }
-        },
-        highlight={
-            "fields": {
-                "content": {
-                    "fragment_size": 150,
-                    "number_of_fragments": 3,
-                    "pre_tags": ["<span class='highlight'>"],
-                    "post_tags": ["</span>"]
-                }
-            }
-        },
-        size=20
-    )
-    
-    hits = []
-    for hit in result['hits']['hits']:
-        doc = hit['_source']
-        highlights = hit.get('highlight', {}).get('content', [])
+    try:
+        query = request.json.get('query', '')
         
-        hits.append({
-            'filename': doc['filename'],
-            'content': doc['content'],
-            'highlight': ' ... '.join(highlights) if highlights else None,
-            'score': hit['_score']
+        result = es.search(
+            index=INDEX_NAME,
+            query={
+                "multi_match": {
+                    "query": query,
+                    "fields": ["content", "filename^2"],
+                    "fuzziness": "AUTO"
+                }
+            },
+            highlight={
+                "fields": {
+                    "content": {
+                        "fragment_size": 150,
+                        "number_of_fragments": 3,
+                        "pre_tags": ["<span class='highlight'>"],
+                        "post_tags": ["</span>"]
+                    }
+                }
+            },
+            size=20
+        )
+        
+        hits = []
+        for hit in result['hits']['hits']:
+            doc = hit['_source']
+            highlights = hit.get('highlight', {}).get('content', [])
+            
+            hits.append({
+                'filename': doc['filename'],
+                'content': doc['content'],
+                'highlight': ' ... '.join(highlights) if highlights else None,
+                'score': hit['_score']
+            })
+        
+        return jsonify({
+            'total': result['hits']['total']['value'],
+            'results': hits
         })
-    
-    return jsonify({
-        'total': result['hits']['total']['value'],
-        'results': hits
-    })
+    except Exception as e:
+        print(f"Search error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/document/<filename>')
 def view_document(filename):
@@ -481,6 +491,7 @@ def view_document(filename):
         )
         
     except Exception as e:
+        print(f"Document view error: {e}")
         return f"Error loading document: {str(e)}", 500
 
 @app.route('/raw/<filename>')
@@ -504,12 +515,17 @@ def view_raw(filename):
         return Response(doc['content'], mimetype='text/plain; charset=utf-8')
         
     except Exception as e:
+        print(f"Raw view error: {e}")
         return f"Error: {str(e)}", 500
 
 @app.route('/stats')
 def stats():
-    count = es.count(index=INDEX_NAME)
-    return jsonify({'count': count['count']})
+    try:
+        count = es.count(index=INDEX_NAME)
+        return jsonify({'count': count['count']})
+    except Exception as e:
+        print(f"Stats error: {e}")
+        return jsonify({'count': 0})
 
 @app.route('/health')
 def health():
@@ -517,18 +533,13 @@ def health():
     try:
         if es.ping():
             return jsonify({'status': 'healthy', 'elasticsearch': 'connected'})
-    except:
-        pass
+    except Exception as e:
+        print(f"Health check error: {e}")
     return jsonify({'status': 'unhealthy', 'elasticsearch': 'disconnected'}), 503
 
 if __name__ == '__main__':
-    # Run with gunicorn in production, flask dev server locally
+    # Run with debug=False to avoid issues in production
     port = int(os.getenv('PORT', 5000))
-    
-    if os.getenv('FLASK_ENV') == 'production':
-        print(f"Running in production mode on port {port}")
-        # Gunicorn will handle this
-    else:
-        print(f"🚀 Starting Knowledge Base Server...")
-        print(f"📍 Access at: http://localhost:{port}")
-        app.run(host='0.0.0.0', port=port, debug=True)
+    print(f"🚀 Starting Knowledge Base Server on port {port}...")
+    print(f"📍 Access at: http://localhost:{port}")
+    app.run(host='0.0.0.0', port=port, debug=False)

@@ -1,136 +1,218 @@
 # FAE Knowledge Base 🔍
 
-A simple, searchable knowledge base for engineering teams using Elasticsearch and Flask.
+A simple, searchable knowledge base for engineering teams using Elasticsearch and Flask with **one-command setup**.
 
-![MockUpSearch](https://github.com/user-attachments/assets/eabb573d-3491-4a1d-809b-91a2aec61091)
+![Knowledge Base Interface](https://github.com/user-attachments/assets/eabb573d-3491-4a1d-809b-91a2aec61091)
 
+## ✨ Features
 
-## Features
+- 📄 **Markdown Support** - Full rendering of markdown documents with syntax highlighting
+- 🔍 **Full-Text Search** - Powerful search across all documentation with highlighting
+- 🚀 **One-Command Setup** - Auto-indexing and startup with single Docker command
+- 📁 **Auto-Indexing** - Automatically indexes documents on startup
+- 🎨 **Clean UI** - Modern, responsive search interface
+- 🐳 **Docker Ready** - Complete containerized deployment
+- 🔓 **No Authentication** - Simple, frictionless setup for internal teams
 
-- 📄 **Markdown Support** - Rendering of markdown documents
-- 🔍 **Full-Text Search** - Search across all ingested documentation
-- 🐳 **Docker Ready** - Easy deployment with Docker Compose
-- 📁 **Auto-Indexing** - Automatically indexes new documents
-- 🎨 **Clean UI** - Simple search interface
+## 🚀 Quick Start
 
-## Quick Start
-
-### 1. Clone the repository
+### 1. Clone and Setup
 ```bash
 git clone https://github.com/Cwilliams333/FAE-knowledge-base.git
 cd FAE-knowledge-base
 ```
 
-### 2. Set up environment
+### 2. Add Your Documents
 ```bash
-cp .env.example .env
-# Edit .env with your settings
-```
-
-### 3. Add your documents
-Place your markdown files in the `documents/` folder:
-```bash
-mkdir documents
+# Place your markdown files in the documents folder
+mkdir -p documents
 cp your-docs/*.md documents/
 ```
 
-### 4. Start with Docker Compose
+### 3. One Command to Start Everything
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
-### 5. Access the UI
-Open http://localhost:5000 in your browser
+**That's it!** 🎉
 
-## Project Structure
+- ⏳ Elasticsearch will start
+- 📄 All documents will be auto-indexed  
+- 🌐 Web interface will be available at http://localhost:5000
+
+## 📁 Project Structure
 ```
 FAE-knowledge-base/
-├── docker-compose.yml      # Docker orchestration
-├── Dockerfile             # Web app container
-├── app.py                # Flask web application
-├── ingest.py             # Document indexer
-├── requirements.txt      # Python dependencies
-├── .env.example         # Environment template
-├── documents/           # Your markdown files go here
-└── README.md           # This file
+├── docker-compose.yml      # Container orchestration
+├── Dockerfile             # Web app container config
+├── startup.sh             # Auto-ingest + web startup script
+├── app.py                 # Flask web application
+├── ingest.py              # Document indexer
+├── requirements.txt       # Python dependencies
+├── .env                   # Environment configuration
+├── documents/             # Your markdown files go here
+└── README.md              # This file
 ```
 
-## Configuration
+## ⚙️ Configuration
 
-### Environment Variables
-- `ELASTIC_PASSWORD` - Password for Elasticsearch
-- `ES_HOST` - Elasticsearch host (default: https://elasticsearch:9200)
-- `INDEX_NAME` - Name of the Elasticsearch index
-- `DOCUMENTS_DIR` - Directory containing documents
-- `WATCH_MODE` - Enable auto-reindexing (true/false)
+### Environment Variables (.env)
+```bash
+# Elasticsearch Configuration (no auth needed)
+ES_HOST=http://elasticsearch:9200
+ES_USER=
+ES_PASSWORD=
 
-## Usage
+# Application Configuration  
+INDEX_NAME=knowledge_base
+FLASK_ENV=development
+PORT=5000
+
+# Indexing Configuration
+DOCUMENTS_DIR=/app/documents
+WATCH_MODE=false
+```
+
+## 📖 Usage
 
 ### Adding Documents
 1. Drop markdown files into the `documents/` folder
-2. Files are automatically indexed within 30 seconds
-3. Search for them immediately
+2. Restart the service: `docker-compose restart web`
+3. Documents are automatically re-indexed and searchable
 
 ### Searching
 - Type keywords in the search box
-- Click on results to view formatted documents
+- Click results to view formatted documents  
 - Use "View Raw" to see original markdown
+- Search supports fuzzy matching and highlighting
 
 ### Supported File Types
-- `.md` - Markdown files
+- `.md` - Markdown files (primary)
 - `.txt` - Plain text files
-- `.csv` - CSV files (coming soon)
-- `.json` - JSON files (coming soon)
+- `.csv` - CSV files 
+- `.json` - JSON files
 
-## Development
+## 🛠️ Development
 
-### Run locally without Docker
+### Local Development (without Docker)
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Start Elasticsearch (if not running)
-docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:8.9.0
+# Start Elasticsearch
+docker run -d -p 9200:9200 -e "discovery.type=single-node" -e "xpack.security.enabled=false" elasticsearch:8.9.0
+
+# Index documents
+python ingest.py
 
 # Run the app
 python app.py
 ```
 
-### Run indexer manually
+### Adding New Documents
 ```bash
-python ingest.py
+# Add files to documents folder
+cp new-file.md documents/
+
+# Restart to re-index
+docker-compose restart web
 ```
 
-## Deployment
+## 🏗️ Architecture
 
-### Using Docker Compose (Recommended)
-```bash
-docker-compose up -d
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Documents/    │───▶│   Elasticsearch  │◀───│   Flask Web     │
+│   (markdown)    │    │   (search index) │    │   (UI + API)    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │                         │
+                              │                         │
+                       ┌──────▼──────┐         ┌────────▼────────┐
+                       │   Auto-     │         │   Search UI     │
+                       │   Indexing  │         │   localhost:5000│
+                       └─────────────┘         └─────────────────┘
 ```
 
-### Manual deployment
-1. Set up Elasticsearch cluster
-2. Configure environment variables
-3. Run app with gunicorn:
-   ```bash
-   gunicorn -w 4 -b 0.0.0.0:5000 app:app
-   ```
+## 🔧 Monitoring & Health
 
-## Monitoring
+- **Health Check**: http://localhost:5000/health
+- **Elasticsearch**: http://localhost:9200
+- **Document Stats**: http://localhost:5000/stats
+- **Logs**: `docker-compose logs -f web`
 
-- Health check: http://localhost:5000/health
-- Elasticsearch: http://localhost:9200
-- Logs: `docker-compose logs -f`
+## 🐛 Troubleshooting
 
-## Troubleshooting
+### Documents Not Appearing
+- Check if files are in `documents/` folder
+- Restart web service: `docker-compose restart web`
+- Check logs: `docker-compose logs web`
 
-### Documents not appearing
-- Check `documents/` folder permissions
-- View indexer logs: `docker-compose logs web`
-- Verify Elasticsearch is running: `docker-compose ps`
+### Search Not Working
+- Verify Elasticsearch is running: `curl http://localhost:9200`
+- Check index exists: `curl http://localhost:9200/knowledge_base/_stats`
+- Restart everything: `docker-compose restart`
 
-### Search not working
-- Ensure Elasticsearch is healthy
-- Check index exists: `curl -k https://elastic:password@localhost:9200/_cat/indices`
-- Rebuild index: `docker-compose restart web`
+### Web Interface Not Loading
+- Ensure port 5000 is not in use
+- Check container status: `docker-compose ps`
+- View logs: `docker-compose logs -f web`
 
+## 🔄 Common Commands
+
+```bash
+# Start everything
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Restart after adding documents  
+docker-compose restart web
+
+# Stop everything
+docker-compose down
+
+# Clean restart (removes data)
+docker-compose down -v && docker-compose up -d --build
+
+# Check status
+docker-compose ps
+```
+
+## 📝 What Changed from Original
+
+### Removed Complexity
+- ❌ **No Kibana** - Custom Flask UI only
+- ❌ **No Authentication** - No passwords or user management  
+- ❌ **No Manual Steps** - Everything automated
+
+### Added Simplicity  
+- ✅ **One Command Setup** - `docker-compose up -d --build`
+- ✅ **Auto-Indexing** - Documents indexed automatically on startup
+- ✅ **Simplified Configuration** - Minimal environment variables
+- ✅ **Better Error Handling** - Robust connection and search handling
+
+### Developer Experience
+- **Before**: Multi-step setup, user creation, manual indexing
+- **After**: Single command, automatic everything, instant search
+
+## 🚀 Deployment
+
+For production deployment:
+
+1. Set `FLASK_ENV=production` in `.env`
+2. Configure proper resource limits in docker-compose.yml
+3. Set up persistent volumes backup
+4. Consider reverse proxy for SSL/domain
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
