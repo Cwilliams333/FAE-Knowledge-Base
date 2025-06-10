@@ -1,0 +1,21 @@
+﻿# Git Attributes for FAE Knowledge Base
+
+# Force Unix line endings (LF) for shell scripts
+*.sh text eol=lf
+startup.sh text eol=lf
+
+# Ensure text files are handled properly
+*.md text
+*.py text
+*.yml text
+*.yaml text
+*.txt text
+*.json text
+
+# Binary files (don't convert line endings)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
