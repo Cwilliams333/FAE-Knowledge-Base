@@ -397,7 +397,7 @@ export function SearchPage() {
             </h1>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium animate-float" style={{ animationDelay: '1s' }}>
-            Search through documentation, guides, and knowledge with powerful AI-driven insights
+            Search through documentation, guides, and knowledge insights
           </p>
         </motion.div>
 
@@ -444,7 +444,7 @@ export function SearchPage() {
                     <Zap className="h-5 w-5 text-primary" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <span className="text-2xl font-bold text-foreground">AI</span>
+                    <span className="text-2xl font-bold text-foreground">FAE</span>
                     <p className="text-sm font-medium">Powered</p>
                   </div>
                 </div>
@@ -466,7 +466,7 @@ export function SearchPage() {
               <CardDescription className="text-lg text-muted-foreground">
                 Use natural language or specific terms. Press{' '}
                 <kbd className="px-3 py-1.5 bg-muted/50 border border-border rounded-md text-xs font-mono font-medium">
-                  ⌘K
+                  Ctrl+K
                 </kbd>{' '}
                 for quick search
               </CardDescription>
@@ -516,7 +516,7 @@ export function SearchPage() {
                   Open Quick Search
                 </div>
                 <kbd className="text-xs bg-muted/70 border border-border/50 px-2 py-1 rounded font-mono">
-                  ⌘K
+                  Ctrl+K
                 </kbd>
               </Button>
             </CardContent>
@@ -574,21 +574,40 @@ export function SearchPage() {
             onValueChange={setQuery}
           />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup heading="Recent Documents">
-              {results.slice(0, 5).map((result) => (
-                <CommandItem
-                  key={result.filename}
-                  onSelect={() => {
-                    openDocument(result.filename)
-                    setOpen(false)
-                  }}
-                >
-                  <File className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                  {result.filename.replace('.md', '')}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {results.length === 0 && query ? (
+              <CommandEmpty>No results found for "{query}"</CommandEmpty>
+            ) : results.length === 0 ? (
+              <CommandEmpty>Start typing to search...</CommandEmpty>
+            ) : (
+              <CommandGroup heading={`Found ${results.length} results`}>
+                {results.slice(0, 8).map((result) => {
+                  const title = result.filename.replace('.md', '').replace(/[-_]/g, ' ').replace(/\w\S*/g, (txt) => 
+                    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+                  )
+                  return (
+                    <CommandItem
+                      key={result.filename}
+                      onSelect={() => {
+                        openDocument(result.filename)
+                        setOpen(false)
+                      }}
+                      className="flex items-start space-x-3 p-3"
+                    >
+                      <File className="h-4 w-4 text-primary mt-1 flex-shrink-0" strokeWidth={1.5} />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-foreground text-sm">{title}</div>
+                        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {result.content.substring(0, 80)}...
+                        </div>
+                        <div className="text-xs text-primary mt-1">
+                          Score: {result.score.toFixed(2)}
+                        </div>
+                      </div>
+                    </CommandItem>
+                  )
+                })}
+              </CommandGroup>
+            )}
           </CommandList>
         </CommandDialog>
       </div>
