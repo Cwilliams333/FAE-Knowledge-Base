@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Search, Hash, Sun, Moon, Copy, Check } from 'lucide-react'
+import { ArrowLeft, FileText, Search, Hash, Sun, Moon } from 'lucide-react'
 import { MDXClient } from '@mintlify/mdx'
 import '@mintlify/mdx/dist/styles.css'
-import { remarkTocExtractor } from '@/lib/remark-toc-extractor'
 import type { TocEntry } from '@/lib/remark-toc-extractor'
 import { useTheme } from '@/contexts/ThemeContext'
 
@@ -205,7 +204,7 @@ export function MintlifyDocumentViewer() {
               <button 
                 onClick={() => navigate('/')}
                 className="hidden sm:flex items-center space-x-2 px-3 py-1.5 border text-muted-foreground hover:text-foreground rounded-md transition-colors"
-                style={{ borderColor: 'hsl(var(--color-border))', ':hover': { borderColor: 'hsl(var(--color-border) / 0.8)' } }}
+                style={{ borderColor: 'hsl(var(--color-border))' }}
               >
                 <Search className="h-4 w-4" />
                 <span>Search</span>
@@ -227,8 +226,7 @@ export function MintlifyDocumentViewer() {
           <div className="px-6 py-12 max-w-4xl mx-auto">
             <article className="mintlify-content animate-fade-in">
               <MDXClient 
-                source={documentData.content}
-                onTocExtracted={handleTocExtracted}
+                compiledSource={documentData.content}
               />
             </article>
           </div>

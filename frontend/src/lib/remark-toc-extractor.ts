@@ -11,7 +11,7 @@ export interface TocEntry {
 // Export the type separately for better compatibility
 
 export const remarkTocExtractor: Plugin<[{ onTocExtracted: (toc: TocEntry[]) => void }], Root> = 
-  ({ onTocExtracted }) => (tree, file) => {
+  ({ onTocExtracted }) => (tree) => {
     const toc: TocEntry[] = []
     
     visit(tree, 'heading', (node: Heading) => {

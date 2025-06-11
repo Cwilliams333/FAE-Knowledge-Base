@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Search, Hash, Sun, Moon, Copy, Check, Loader2, X } from 'lucide-react'
+import { ArrowLeft, FileText, Search, Sun, Moon, Copy, Check, Loader2, X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkSlug from 'remark-slug'
@@ -410,7 +410,7 @@ export function DocumentViewer() {
                                prose-li:marker:text-primary/60
                                animate-fade-in">
               <ReactMarkdown
-                remarkPlugins={[[remarkGfm], [remarkSlug], [remarkTocExtractor, { onTocExtracted: handleTocExtracted }]]}
+                remarkPlugins={[remarkGfm, remarkSlug, [remarkTocExtractor as any, { onTocExtracted: handleTocExtracted }]] as any}
                 components={{
                   h1: ({ children, ...props }) => (
                     <h1 className="text-4xl font-bold mt-12 mb-6 text-foreground tracking-tight" {...props}>
@@ -459,7 +459,7 @@ export function DocumentViewer() {
                       {children}
                     </blockquote>
                   ),
-                  code: ({ children, className, inline, ...props }: any) => {
+                  code: ({ children, className, inline }: any) => {
                     // Check if it's inline code
                     if (inline || !className) {
                       const codeContent = String(children).trim()
@@ -545,7 +545,7 @@ export function DocumentViewer() {
                       </div>
                     )
                   },
-                  pre: ({ children, ...props }) => {
+                  pre: ({ children }: any) => {
                     // Return children directly since we're handling the wrapper in the code component
                     return <>{children}</>
                   }

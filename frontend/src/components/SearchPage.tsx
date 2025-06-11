@@ -158,7 +158,7 @@ SearchResultItem.displayName = 'SearchResultItem'
 
 export function SearchPage() {
   const navigate = useNavigate()
-  const { theme, toggleTheme } = useTheme()
+  const { toggleTheme } = useTheme()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [total, setTotal] = useState(0)

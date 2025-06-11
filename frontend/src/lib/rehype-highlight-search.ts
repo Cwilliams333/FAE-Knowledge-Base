@@ -1,4 +1,4 @@
-import { visit } from 'unist-util-visit';
+import { visit, SKIP } from 'unist-util-visit';
 
 // Rehype plugin to highlight search terms in markdown content
 export const rehypeHighlightSearch = (searchTerm?: string) => {
@@ -66,7 +66,7 @@ export const rehypeHighlightSearch = (searchTerm?: string) => {
 
       // Tell `visit` to skip over the new nodes we just added
       // We return `index + newChildren.length` to advance the visitor past our new nodes
-      return [visit.SKIP, index + newChildren.length];
+      return [SKIP, index + newChildren.length];
     });
   };
 };

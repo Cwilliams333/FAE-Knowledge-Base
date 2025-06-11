@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -94,10 +94,9 @@ export function SimpleDocumentViewer() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="prose prose-invert prose-blue max-w-none">
+        <div className="prose prose-invert prose-blue max-w-none markdown-content">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            className="markdown-content"
             components={{
               h1: ({ children, ...props }) => (
                 <h1 {...props} className="text-3xl font-bold mb-6 text-white border-b border-gray-700 pb-3">
