@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, FileText, Search, Hash, Sun, Moon, Copy, Check } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkSlug from 'remark-slug'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { ArrowLeft, FileText, Search, Hash, Sun, Moon, Copy, Check } from 'lucide-react'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { remarkTocExtractor } from '@/lib/remark-toc-extractor'
 import type { TocEntry } from '@/lib/remark-toc-extractor'
 import { useTheme } from '@/contexts/ThemeContext'
+import { InlineCode, detectCodeType } from '@/components/InlineCode'
 
 interface DocumentData {
   filename: string
@@ -20,30 +21,6 @@ interface DocumentData {
   }
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="absolute top-3 right-3 p-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
-      aria-label="Copy code"
-    >
-      {copied ? (
-        <Check className="h-4 w-4 text-green-400" />
-      ) : (
-        <Copy className="h-4 w-4 text-gray-400" />
-      )}
-    </button>
-  )
-}
-
 function TableOfContents({ toc, activeId, onItemClick }: { 
   toc: TocEntry[]
   activeId: string | null
@@ -52,11 +29,10 @@ function TableOfContents({ toc, activeId, onItemClick }: {
   if (toc.length === 0) return null
 
   return (
-    <div className="hidden lg:block w-72 border-r border-border sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto bg-background-surface">
+    <div className="hidden lg:block w-72 border-r sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto bg-background" style={{ borderColor: 'hsl(var(--color-border))' }}>
       <div className="p-6">
-        <div className="flex items-center space-x-2 mb-6">
-          <Hash className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+        <div className="mb-6">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             On this page
           </h2>
         </div>
@@ -66,17 +42,20 @@ function TableOfContents({ toc, activeId, onItemClick }: {
               key={`${item.id}-${index}`}
               onClick={() => onItemClick(item.id)}
               className={`
-                block w-full text-left px-3 py-2 rounded-md text-sm transition-all duration-200
-                ${item.depth === 1 ? 'font-medium' : ''}
-                ${item.depth === 2 ? 'ml-4' : ''}
-                ${item.depth === 3 ? 'ml-8' : ''}
-                ${item.depth === 4 ? 'ml-12' : ''}
+                block w-full text-left py-1.5 text-sm transition-all duration-200 relative
+                ${item.depth === 1 ? 'font-semibold' : 'font-normal'}
+                ${item.depth === 2 ? 'pl-4' : ''}
+                ${item.depth === 3 ? 'pl-8' : ''}
+                ${item.depth === 4 ? 'pl-12' : ''}
                 ${activeId === item.id 
-                  ? 'bg-primary/10 text-primary border-l-2 border-primary pl-3' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  ? 'text-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
                 }
               `}
             >
+              {activeId === item.id && (
+                <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary rounded-r" />
+              )}
               <span className="truncate block">{item.text}</span>
             </button>
           ))}
@@ -106,7 +85,9 @@ export function DocumentViewer() {
     const fetchDocument = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`http://172.20.32.1:5000/api/document/${filename}`)
+        // Get the API base URL from the host/environment or use default
+        const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'http://172.20.32.1:5000'
+        const response = await fetch(`${apiBaseUrl}/api/document/${filename}`)
         if (!response.ok) {
           throw new Error(`Failed to fetch document: ${response.statusText}`)
         }
@@ -189,12 +170,10 @@ export function DocumentViewer() {
     )
   }
 
-  const codeStyle = theme === 'dark' ? oneDark : oneLight
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="border-b border-border bg-background-surface/80 backdrop-blur-sm sticky top-0 z-50">
+      <div className="border-b bg-background-surface backdrop-blur-sm sticky top-0 z-50" style={{ borderColor: 'hsl(var(--color-border))' }}>
         <div className="max-w-[1440px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -207,7 +186,7 @@ export function DocumentViewer() {
               </button>
               
               <div className="hidden sm:block">
-                <div className="h-6 w-px bg-border" />
+                <div className="h-6 w-px" style={{ backgroundColor: 'hsl(var(--color-border))' }} />
               </div>
               
               <div className="min-w-0">
@@ -234,7 +213,8 @@ export function DocumentViewer() {
               
               <button 
                 onClick={() => navigate('/')}
-                className="hidden sm:flex items-center space-x-2 px-3 py-1.5 border border-border text-muted-foreground hover:text-foreground hover:border-border/80 rounded-md transition-colors"
+                className="hidden sm:flex items-center space-x-2 px-3 py-1.5 border text-muted-foreground hover:text-foreground rounded-md transition-colors"
+                style={{ borderColor: 'hsl(var(--color-border))' }}
               >
                 <Search className="h-4 w-4" />
                 <span>Search</span>
@@ -252,172 +232,161 @@ export function DocumentViewer() {
         />
         
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 bg-background">
           <div className="px-6 py-12 max-w-4xl mx-auto">
-            <article className="prose prose-neutral dark:prose-invert max-w-none animate-fade-in">
+            <article className="mintlify-content prose prose-lg max-w-none dark:prose-invert 
+                               prose-headings:font-semibold prose-headings:tracking-tight 
+                               prose-p:text-foreground-light prose-headings:text-foreground 
+                               prose-strong:text-foreground prose-strong:font-semibold
+                               prose-code:text-foreground prose-code:font-normal
+                               prose-pre:bg-transparent prose-pre:p-0
+                               prose-img:rounded-lg prose-img:shadow-md
+                               prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary-hover 
+                               hover:prose-a:underline hover:prose-a:decoration-primary/30
+                               prose-blockquote:border-primary prose-blockquote:bg-primary/5 
+                               prose-blockquote:rounded-r-lg prose-blockquote:py-1
+                               prose-li:marker:text-primary/60
+                               animate-fade-in">
               <ReactMarkdown
-                remarkPlugins={[
-                  remarkGfm,
-                  remarkSlug,
-                  [remarkTocExtractor, { onTocExtracted: handleTocExtracted }]
-                ]}
+                remarkPlugins={[[remarkGfm], [remarkSlug], [remarkTocExtractor, { onTocExtracted: handleTocExtracted }]]}
                 components={{
-                  h1: ({ children, id, ...props }) => (
-                    <h1 
-                      {...props} 
-                      id={id}
-                      className="text-4xl font-bold mb-8 text-foreground border-b border-border pb-4 scroll-mt-20"
-                    >
+                  h1: ({ children, ...props }) => (
+                    <h1 className="text-4xl font-bold mt-12 mb-6 text-foreground tracking-tight" {...props}>
                       {children}
                     </h1>
                   ),
-                  h2: ({ children, id, ...props }) => (
-                    <h2 
-                      {...props} 
-                      id={id}
-                      className="text-2xl font-semibold mb-4 mt-8 text-foreground scroll-mt-20"
-                    >
+                  h2: ({ children, ...props }) => (
+                    <h2 className="text-3xl font-semibold mt-10 mb-5 text-foreground tracking-tight" {...props}>
                       {children}
                     </h2>
                   ),
-                  h3: ({ children, id, ...props }) => (
-                    <h3 
-                      {...props} 
-                      id={id}
-                      className="text-xl font-medium mb-3 mt-6 text-foreground scroll-mt-20"
-                    >
+                  h3: ({ children, ...props }) => (
+                    <h3 className="text-2xl font-semibold mt-8 mb-4 text-foreground tracking-tight" {...props}>
                       {children}
                     </h3>
                   ),
-                  h4: ({ children, id, ...props }) => (
-                    <h4 
-                      {...props} 
-                      id={id}
-                      className="text-lg font-medium mb-2 mt-4 text-foreground scroll-mt-20"
-                    >
-                      {children}
-                    </h4>
-                  ),
                   p: ({ children, ...props }) => (
-                    <p {...props} className="mb-4 text-foreground-light leading-relaxed text-base">
+                    <p className="mb-6 leading-[1.75] text-foreground-light text-base" {...props}>
                       {children}
                     </p>
                   ),
-                  code: ({ children, className, ...props }) => {
-                    const match = /language-(\w+)/.exec(className || '')
-                    const isInline = !match
-                    
-                    return isInline ? (
-                      <code 
-                        {...props} 
-                        className="bg-background-inline-code text-primary px-1.5 py-0.5 rounded text-sm font-mono border border-border"
-                      >
-                        {children}
-                      </code>
-                    ) : (
-                      <div className="code-block-wrapper relative">
-                        {match && (
-                          <div className="code-block-header">
-                            <span className="code-block-language">{match[1]}</span>
-                          </div>
-                        )}
-                        <CopyButton text={String(children).replace(/\n$/, '')} />
-                        <SyntaxHighlighter
-                          language={match?.[1] || 'text'}
-                          style={codeStyle}
-                          customStyle={{
-                            margin: 0,
-                            padding: '1.5rem',
-                            background: 'transparent',
-                            fontSize: '0.875rem',
-                            lineHeight: '1.5',
-                          }}
-                          codeTagProps={{
-                            style: {
-                              fontFamily: 'var(--font-mono)',
-                            }
-                          }}
-                        >
-                          {String(children).replace(/\n$/, '')}
-                        </SyntaxHighlighter>
-                      </div>
-                    )
-                  },
-                  pre: ({ children, ...props }) => (
-                    <>{children}</>
-                  ),
-                  blockquote: ({ children, ...props }) => (
-                    <blockquote 
-                      {...props} 
-                      className="border-l-4 border-primary pl-4 my-6 text-muted-foreground italic bg-muted/30 py-3 pr-4 rounded-r-lg"
-                    >
+                  a: ({ children, ...props }) => (
+                    <a className="text-primary hover:text-primary-hover underline decoration-primary/30 hover:decoration-primary transition-colors" {...props}>
                       {children}
-                    </blockquote>
+                    </a>
                   ),
                   ul: ({ children, ...props }) => (
-                    <ul {...props} className="list-disc list-inside mb-4 text-foreground-light space-y-2 ml-4">
+                    <ul className="my-6 space-y-3 list-disc list-outside ml-6" {...props}>
                       {children}
                     </ul>
                   ),
                   ol: ({ children, ...props }) => (
-                    <ol {...props} className="list-decimal list-inside mb-4 text-foreground-light space-y-2 ml-4">
+                    <ol className="my-6 space-y-3 list-decimal list-outside ml-6" {...props}>
                       {children}
                     </ol>
                   ),
                   li: ({ children, ...props }) => (
-                    <li {...props} className="text-foreground-light">
+                    <li className="text-foreground-light leading-relaxed" {...props}>
                       {children}
                     </li>
                   ),
-                  a: ({ children, href, ...props }) => (
-                    <a 
-                      {...props} 
-                      href={href}
-                      className="text-primary hover:text-primary-hover underline-offset-2 transition-colors font-medium"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                  blockquote: ({ children, ...props }) => (
+                    <blockquote className="border-l-4 border-primary pl-6 pr-4 py-3 my-6 
+                                         bg-background rounded-r-lg 
+                                         text-foreground-light not-italic" {...props}>
                       {children}
-                    </a>
+                    </blockquote>
                   ),
-                  table: ({ children, ...props }) => (
-                    <div className="overflow-x-auto mb-6 rounded-lg border border-border">
-                      <table {...props} className="min-w-full divide-y divide-border">
-                        {children}
-                      </table>
-                    </div>
-                  ),
-                  thead: ({ children, ...props }) => (
-                    <thead {...props} className="bg-muted">
-                      {children}
-                    </thead>
-                  ),
-                  th: ({ children, ...props }) => (
-                    <th 
-                      {...props} 
-                      className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider"
-                    >
-                      {children}
-                    </th>
-                  ),
-                  td: ({ children, ...props }) => (
-                    <td {...props} className="px-6 py-4 text-sm text-foreground-light whitespace-nowrap">
-                      {children}
-                    </td>
-                  ),
-                  hr: ({ ...props }) => (
-                    <hr {...props} className="my-8 border-border" />
-                  ),
-                  strong: ({ children, ...props }) => (
-                    <strong {...props} className="font-semibold text-foreground">
-                      {children}
-                    </strong>
-                  ),
-                  em: ({ children, ...props }) => (
-                    <em {...props} className="italic text-foreground">
-                      {children}
-                    </em>
-                  ),
+                  code: ({ children, className, inline, ...props }: any) => {
+                    // Check if it's inline code
+                    if (inline || !className) {
+                      const codeContent = String(children).trim()
+                      const codeType = detectCodeType(codeContent)
+                      return <InlineCode type={codeType}>{codeContent}</InlineCode>
+                    }
+
+                    // It's a code block
+                    const match = /language-(\w+)/.exec(className || '')
+                    const language = match ? match[1] : null
+                    
+                    const [copied, setCopied] = useState(false)
+                    const codeContent = String(children).replace(/\n$/, '')
+
+                    const handleCopy = () => {
+                      navigator.clipboard.writeText(codeContent)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 2000)
+                    }
+
+                    return (
+                      <div className="relative group my-6 rounded-xl overflow-hidden border border-border bg-background-code shadow-sm">
+                        {/* Code block header */}
+                        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-background-surface">
+                          <div className="flex items-center space-x-3">
+                            {/* Mac-style window controls */}
+                            <div className="flex items-center space-x-1.5">
+                              <div className="w-3 h-3 rounded-full bg-red-500" />
+                              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                              <div className="w-3 h-3 rounded-full bg-green-500" />
+                            </div>
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              {language || 'code'}
+                            </span>
+                          </div>
+                          <button
+                            onClick={handleCopy}
+                            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md 
+                                     text-muted-foreground hover:text-foreground hover:bg-muted 
+                                     transition-all duration-200 opacity-0 group-hover:opacity-100"
+                            aria-label="Copy code"
+                          >
+                            {copied ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-green-500" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        
+                        {/* Code content */}
+                        <div className="relative">
+                          <SyntaxHighlighter
+                            language={language || 'plaintext'}
+                            style={theme === 'dark' ? vscDarkPlus : vs}
+                            customStyle={{
+                              margin: 0,
+                              padding: '1.25rem',
+                              background: 'transparent',
+                              fontSize: '0.875rem',
+                              lineHeight: '1.7',
+                              fontFamily: 'var(--font-mono)',
+                            }}
+                            showLineNumbers={codeContent.split('\n').length > 5}
+                            lineNumberStyle={{
+                              color: theme === 'dark' ? '#4a5568' : '#cbd5e0',
+                              fontSize: '0.75rem',
+                              paddingRight: '1rem',
+                              userSelect: 'none'
+                            }}
+                            wrapLines={true}
+                            wrapLongLines={true}
+                          >
+                            {codeContent}
+                          </SyntaxHighlighter>
+                        </div>
+                      </div>
+                    )
+                  },
+                  pre: ({ children, ...props }) => {
+                    // Return children directly since we're handling the wrapper in the code component
+                    return <>{children}</>
+                  }
                 }}
               >
                 {documentData.content}

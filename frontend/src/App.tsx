@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { SearchPage } from '@/components/SearchPage'
 import { DocumentViewer } from '@/components/DocumentViewer'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+// Custom Mintlify-inspired styles implemented in index.css
 
 function App() {
   return (

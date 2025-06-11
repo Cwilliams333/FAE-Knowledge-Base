@@ -111,7 +111,8 @@ const SearchResultItem = React.memo(({ result, onClick, searchQuery }: {
     whileHover={{ y: -2 }}
   >
     <Card 
-      className="group cursor-pointer glass-effect border-border/50 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 ease-out"
+      className="group cursor-pointer glass-effect premium-card sparkle-effect hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 ease-out"
+      style={{ borderColor: 'hsl(var(--color-border) / 0.5)' }}
       onClick={() => onClick(result.filename)}
     >
       <CardHeader className="pb-4">
@@ -121,7 +122,7 @@ const SearchResultItem = React.memo(({ result, onClick, searchQuery }: {
           </div>
           <div className="flex-1 min-w-0">
             <CardTitle 
-              className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors tracking-tight leading-tight"
+              className="text-lg font-semibold text-foreground group-hover:cosmic-text transition-all duration-300 tracking-tight leading-tight"
               dangerouslySetInnerHTML={{ __html: highlightedTitle }}
             />
             <div className="flex items-center space-x-3 mt-2">
@@ -181,8 +182,10 @@ export function SearchPage() {
   useEffect(() => {
     const controller = new AbortController()
 
-    console.log('🔄 Fetching stats from http://172.20.32.1:5000/stats')
-    fetch('http://172.20.32.1:5000/stats', { signal: controller.signal })
+    // Get the API base URL from the host/environment or use default
+    const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'http://172.20.32.1:5000'
+    console.log(`🔄 Fetching stats from ${apiBaseUrl}/stats`)
+    fetch(`${apiBaseUrl}/stats`, { signal: controller.signal })
       .then(res => {
         console.log('📊 Stats response:', res.status, res.ok)
         if (!res.ok) throw new Error('Failed to fetch stats')
@@ -231,7 +234,9 @@ export function SearchPage() {
       setError(null)
 
       try {
-        const response = await fetch('http://172.20.32.1:5000/search', {
+        // Get the API base URL from the host/environment or use default
+        const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'http://172.20.32.1:5000'
+        const response = await fetch(`${apiBaseUrl}/search`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query: debouncedQuery }),
@@ -377,20 +382,21 @@ export function SearchPage() {
           {/* Theme Toggle - positioned absolutely */}
           <button 
             onClick={toggleTheme}
-            className="theme-toggle absolute top-0 right-0"
+            className="theme-toggle absolute top-0 right-0 animate-float"
             aria-label="Toggle theme"
+            style={{ animationDelay: '2s' }}
           >
             <Sun className="sun-icon text-yellow-500" />
             <Moon className="moon-icon text-blue-400" />
           </button>
           
-          <div className="mb-6">
+          <div className="mb-8 animate-float" style={{ animationDelay: '0.5s' }}>
             <h1 className="text-6xl sm:text-7xl font-bold tracking-tight text-center">
-              <div className="accent-gradient mb-2">FAE</div>
+              <div className="accent-gradient mb-3">FAE</div>
               <div className="text-4xl sm:text-5xl text-foreground">Knowledge Base</div>
             </h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium animate-float" style={{ animationDelay: '1s' }}>
             Search through documentation, guides, and knowledge with powerful AI-driven insights
           </p>
         </motion.div>
@@ -454,7 +460,7 @@ export function SearchPage() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="mb-16"
         >
-          <Card className="glass-effect border-border/50 shadow-2xl shadow-primary/5">
+          <Card className="glass-effect border-border/50 shadow-2xl shadow-primary/5 animate-pulse-border">
             <CardHeader className="text-center pb-6">
               <CardTitle className="text-3xl font-bold text-gradient">Search Documentation</CardTitle>
               <CardDescription className="text-lg text-muted-foreground">

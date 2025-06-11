@@ -14,7 +14,8 @@ load_dotenv()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": ["http://172.20.32.1:5173", "http://localhost:5173"]}})
+# Allow specific origins for CORS (WSL gateway IP and localhost)
 
 # Configuration from environment variables
 ES_HOST = os.getenv('ES_HOST', 'http://localhost:9200')
