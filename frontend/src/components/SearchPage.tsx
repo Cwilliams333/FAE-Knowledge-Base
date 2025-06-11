@@ -8,14 +8,6 @@ import { rehypeHighlightSearch } from '@/lib/rehype-highlight-search'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useTheme } from '@/contexts/ThemeContext'
 
@@ -566,50 +558,118 @@ export function SearchPage() {
           )}
         </AnimatePresence>
 
-        {/* Command Dialog */}
-        <CommandDialog open={open} onOpenChange={setOpen}>
-          <CommandInput 
-            placeholder="Search documentation..." 
-            value={query}
-            onValueChange={setQuery}
-          />
-          <CommandList>
-            {results.length === 0 && query ? (
-              <CommandEmpty>No results found for "{query}"</CommandEmpty>
-            ) : results.length === 0 ? (
-              <CommandEmpty>Start typing to search...</CommandEmpty>
-            ) : (
-              <CommandGroup heading={`Found ${results.length} results`}>
-                {results.slice(0, 8).map((result) => {
-                  const title = result.filename.replace('.md', '').replace(/[-_]/g, ' ').replace(/\w\S*/g, (txt) => 
-                    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-                  )
-                  return (
-                    <CommandItem
-                      key={result.filename}
-                      onSelect={() => {
-                        openDocument(result.filename)
-                        setOpen(false)
-                      }}
-                      className="flex items-start space-x-3 p-3"
-                    >
-                      <File className="h-4 w-4 text-primary mt-1 flex-shrink-0" strokeWidth={1.5} />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-foreground text-sm">{title}</div>
-                        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {result.content.substring(0, 80)}...
-                        </div>
-                        <div className="text-xs text-primary mt-1">
-                          Score: {result.score.toFixed(2)}
-                        </div>
+        {/* Custom Quick Search Dialog */}
+        {open && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+              onClick={() => setOpen(false)}
+            />
+            
+            {/* Search Dialog */}
+            <div className="relative w-full max-w-2xl">
+              <Card className="glass-effect border-border/50 shadow-2xl animate-fade-in">
+                <CardHeader className="pb-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search documentation..."
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="pl-10 pr-4 py-3 text-base bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                      autoFocus
+                    />
+                    {status === SEARCH_STATUS.LOADING && (
+                      <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
+                    )}
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="pt-0 max-h-96 overflow-y-auto">
+                  {status === SEARCH_STATUS.LOADING ? (
+                    <div className="text-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto mb-3 text-primary" />
+                      <p className="text-muted-foreground">Searching...</p>
+                    </div>
+                  ) : results.length === 0 && query ? (
+                    <div className="text-center py-8">
+                      <Search className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+                      <p className="text-muted-foreground">No results found for "{query}"</p>
+                    </div>
+                  ) : results.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Search className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+                      <p className="text-muted-foreground">Start typing to search documentation...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="text-sm text-muted-foreground mb-3">
+                        Found {results.length} result{results.length !== 1 ? 's' : ''}
                       </div>
-                    </CommandItem>
-                  )
-                })}
-              </CommandGroup>
-            )}
-          </CommandList>
-        </CommandDialog>
+                      {results.slice(0, 6).map((result, index) => {
+                        const title = result.filename.replace('.md', '').replace(/[-_]/g, ' ').replace(/\w\S*/g, (txt) => 
+                          txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+                        )
+                        return (
+                          <Card 
+                            key={`${result.filename}-${index}`}
+                            className="cursor-pointer hover:border-primary/30 hover:shadow-md transition-all duration-200 group"
+                            onClick={() => {
+                              openDocument(result.filename)
+                              setOpen(false)
+                            }}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-start space-x-3">
+                                <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                  <File className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-foreground group-hover:text-primary transition-colors text-sm leading-tight">
+                                    {title}
+                                  </h4>
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                                    {result.content.substring(0, 120)}...
+                                  </p>
+                                  <div className="flex items-center justify-between mt-2">
+                                    <span className="text-xs text-muted-foreground">
+                                      {result.score.toFixed(2)} relevance
+                                    </span>
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <span className="text-xs text-primary">View document →</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                      
+                      {results.length > 6 && (
+                        <Card className="cursor-pointer hover:border-primary/30 transition-colors">
+                          <CardContent 
+                            className="p-4 text-center"
+                            onClick={() => {
+                              setOpen(false)
+                              // Keep the search query to show full results
+                            }}
+                          >
+                            <p className="text-sm text-primary font-medium">
+                              View all {results.length} results
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
