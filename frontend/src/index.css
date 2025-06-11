@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+:root {
+  /* Premium Software Theme - Mintlify-inspired */
+  --background: 240 6% 10%;
+  --foreground: 0 0% 98%;
+  --card: 240 4% 16%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 4% 16%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 200 85% 55%;
+  --primary-foreground: 240 6% 10%;
+  --secondary: 240 4% 20%;
+  --secondary-foreground: 0 0% 90%;
+  --muted: 240 4% 25%;
+  --muted-foreground: 240 5% 64%;
+  --accent: 240 4% 20%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 4% 22%;
+  --input: 240 4% 18%;
+  --ring: 200 85% 55%;
+  --radius: 0.625rem;
+  
+  /* Premium gradients with darker blue */
+  --gradient-primary: linear-gradient(135deg, hsl(200 85% 55%) 0%, hsl(200 85% 45%) 100%);
+  --gradient-surface: linear-gradient(135deg, hsl(240 4% 16% / 0.8) 0%, hsl(240 4% 20% / 0.4) 100%);
+  --gradient-glow: radial-gradient(ellipse 80% 50% at 50% 120%, hsl(200 85% 55% / 0.15), transparent);
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background: hsl(var(--background));
+  background-image: var(--gradient-glow);
+  color: hsl(var(--foreground));
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  margin: 0;
+  padding: 0;
+  letter-spacing: -0.015em;
+}
+
+/* Premium glass morphism */
+.glass-effect {
+  background: var(--gradient-surface);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid hsl(var(--border) / 0.8);
+  box-shadow: 
+    0 8px 32px hsl(var(--background) / 0.5),
+    inset 0 1px 0 hsl(var(--border) / 0.8);
+}
+
+/* Premium background effects */
+.premium-bg {
+  background: hsl(var(--background));
+  background-image: 
+    var(--gradient-glow),
+    radial-gradient(circle at 80% 20%, hsl(262 83% 58% / 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, hsl(240 100% 70% / 0.03) 0%, transparent 50%);
+}
+
+/* Premium text gradient */
+.text-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--foreground)) 0%, 
+    hsl(var(--muted-foreground)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Premium accent gradient */
+.accent-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Premium button styles */
+.premium-button {
+  background: var(--gradient-primary);
+  box-shadow: 
+    0 4px 14px hsl(262 83% 58% / 0.35),
+    inset 0 1px 0 hsl(262 83% 68% / 0.5);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px hsl(262 83% 58% / 0.5),
+    inset 0 1px 0 hsl(262 83% 68% / 0.5);
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
