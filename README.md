@@ -1,8 +1,17 @@
 # FAE Knowledge Base 🔍
 
-A simple, searchable knowledge base for engineering teams using Elasticsearch and Flask with **one-command setup**.
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.0.0-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+[![React](https://img.shields.io/badge/React-19.1.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-6.3.5-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-4.1.8-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.9.0-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)](https://elastic.co)
 
-![Knowledge Base Interface](https://github.com/user-attachments/assets/eabb573d-3491-4a1d-809b-91a2aec61091)
+A modern, searchable knowledge base for engineering teams with **premium React frontend** and **one-command Docker setup**.
+
+![Knowledge Base Interface](2FAEfrontend.gif)
 
 ## ✨ Features
 
