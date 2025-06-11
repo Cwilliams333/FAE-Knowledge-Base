@@ -518,6 +518,62 @@ def view_raw(filename):
         print(f"Raw view error: {e}")
         return f"Error: {str(e)}", 500
 
+@app.route('/api/document/<filename>')
+def get_document_api(filename):
+    """Get document content as JSON for React frontend"""
+    try:
+        result = es.search(
+            index=INDEX_NAME,
+            query={
+                "term": {
+                    "filename": filename
+                }
+            }
+        )
+        
+        if result['hits']['total']['value'] == 0:
+            # Try fuzzy match if exact match fails
+            result = es.search(
+                index=INDEX_NAME,
+                query={
+                    "match": {
+                        "filename": filename
+                    }
+                }
+            )
+            
+            if result['hits']['total']['value'] == 0:
+                return jsonify({'error': 'Document not found'}), 404
+        
+        doc = result['hits']['hits'][0]['_source']
+        
+        # Extract title from filename or content
+        title = filename.replace('.md', '').replace('-', ' ').replace('_', ' ').title()
+        
+        # Try to extract description from first paragraph
+        content_lines = doc['content'].split('\n')
+        description = None
+        for line in content_lines:
+            line = line.strip()
+            if line and not line.startswith('#') and not line.startswith('```'):
+                description = line[:150] + '...' if len(line) > 150 else line
+                break
+        
+        return jsonify({
+            'filename': filename,
+            'content': doc['content'],
+            'metadata': {
+                'title': title,
+                'description': description,
+                'size': len(doc['content']),
+                'timestamp': doc.get('timestamp', 'Unknown')
+            }
+        })
+        
+    except Exception as e:
+        print(f"API document error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/stats')
 def stats():
     try:
@@ -536,6 +592,11 @@ def health():
     except Exception as e:
         print(f"Health check error: {e}")
     return jsonify({'status': 'unhealthy', 'elasticsearch': 'disconnected'}), 503
+
+@app.route('/test-api')
+def test_api():
+    """Test endpoint to verify API is working"""
+    return jsonify({'message': 'API is working', 'timestamp': time.time()})
 
 if __name__ == '__main__':
     # Run with debug=False to avoid issues in production

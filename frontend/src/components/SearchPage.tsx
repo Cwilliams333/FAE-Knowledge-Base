@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, File, Zap, Database, AlertCircle, Loader2 } from 'lucide-react'
+import { Search, File, Zap, Database, AlertCircle, Loader2, Sun, Moon } from 'lucide-react'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { rehypeHighlightSearch } from '@/lib/rehype-highlight-search'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +17,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useTheme } from '@/contexts/ThemeContext'
 
 // Search states enum for better state management
 const SEARCH_STATUS = {
@@ -41,10 +46,63 @@ interface StatsResponse {
   count: number
 }
 
-const SearchResultItem = React.memo(({ result, onClick }: { 
+const SearchResultItem = React.memo(({ result, onClick, searchQuery }: { 
   result: SearchResult
   onClick: (filename: string) => void 
-}) => (
+  searchQuery: string
+}) => {
+  // Simple title highlighter (since title isn't markdown)
+  const highlightTitle = (text: string, query: string) => {
+    if (!query.trim()) return text
+    
+    const terms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0)
+    let highlightedText = text
+    
+    terms.forEach(term => {
+      const regex = new RegExp(`(${term})`, 'gi')
+      highlightedText = highlightedText.replace(regex, '<mark class="search-highlight">$1</mark>')
+    })
+    
+    return highlightedText
+  }
+
+  // Function to render markdown with search term highlighting
+  const renderMarkdownWithHighlight = (text: string) => {
+    return (
+      <Markdown 
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[[rehypeHighlightSearch, searchQuery]]}
+        components={{
+          // Style markdown elements nicely
+          p: ({ children, ...props }: any) => <p {...props} className="mb-2 leading-relaxed">{children}</p>,
+          h1: ({ children, ...props }: any) => <h1 {...props} className="text-xl font-bold mb-2">{children}</h1>,
+          h2: ({ children, ...props }: any) => <h2 {...props} className="text-lg font-bold mb-2">{children}</h2>,
+          h3: ({ children, ...props }: any) => <h3 {...props} className="text-md font-bold mb-1">{children}</h3>,
+          strong: ({ children, ...props }: any) => <strong {...props} className="font-bold">{children}</strong>,
+          em: ({ children, ...props }: any) => <em {...props} className="italic">{children}</em>,
+          code: ({ children, ...props }: any) => <code {...props} className="bg-muted px-1 py-0.5 rounded text-sm font-mono">{children}</code>,
+          pre: ({ children, ...props }: any) => <pre {...props} className="bg-muted p-2 rounded overflow-x-auto mb-2">{children}</pre>,
+          blockquote: ({ children, ...props }: any) => <blockquote {...props} className="border-l-4 border-muted-foreground/20 pl-4 italic mb-2">{children}</blockquote>,
+          ul: ({ children, ...props }: any) => <ul {...props} className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+          ol: ({ children, ...props }: any) => <ol {...props} className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+          li: ({ children, ...props }: any) => <li {...props}>{children}</li>
+        }}
+      >
+        {text}
+      </Markdown>
+    )
+  }
+
+
+  // Always use markdown rendering, but get content from the right source
+  const contentToRender = result.content.substring(0, 500) + '...'
+  // Always render as markdown for proper formatting
+  const titleText = result.filename.replace('.md', '').replace(/[-_]/g, ' ').replace(/\w\S*/g, (txt) => 
+    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  )
+  const highlightedTitle = highlightTitle(titleText, searchQuery)
+
+  return (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -62,11 +120,10 @@ const SearchResultItem = React.memo(({ result, onClick }: {
             <File className="h-5 w-5 text-primary" strokeWidth={1.5} />
           </div>
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors tracking-tight leading-tight">
-              {result.filename.replace('.md', '').replace(/[-_]/g, ' ').replace(/\w\S*/g, (txt) => 
-                txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-              )}
-            </CardTitle>
+            <CardTitle 
+              className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors tracking-tight leading-tight"
+              dangerouslySetInnerHTML={{ __html: highlightedTitle }}
+            />
             <div className="flex items-center space-x-3 mt-2">
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
@@ -82,12 +139,9 @@ const SearchResultItem = React.memo(({ result, onClick }: {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div 
-          className="text-sm text-muted-foreground line-clamp-3 leading-relaxed group-hover:text-foreground/80 transition-colors"
-          dangerouslySetInnerHTML={{
-            __html: result.highlight || result.content.substring(0, 300) + '...'
-          }}
-        />
+        <div className="text-sm text-muted-foreground line-clamp-3 leading-relaxed group-hover:text-foreground/80 transition-colors markdown-content">
+          {renderMarkdownWithHighlight(contentToRender)}
+        </div>
         <div className="mt-4 flex items-center justify-between">
           <div className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-md">
             Documentation
@@ -104,11 +158,14 @@ const SearchResultItem = React.memo(({ result, onClick }: {
       </CardContent>
     </Card>
   </motion.div>
-))
+  )
+})
 
 SearchResultItem.displayName = 'SearchResultItem'
 
 export function SearchPage() {
+  const navigate = useNavigate()
+  const { theme, toggleTheme } = useTheme()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [total, setTotal] = useState(0)
@@ -225,8 +282,8 @@ export function SearchPage() {
   }, [handleSearch])
 
   const openDocument = useCallback((filename: string) => {
-    window.open(`http://172.20.32.1:5000/document/${encodeURIComponent(filename)}`, '_blank')
-  }, [])
+    navigate(`/document/${encodeURIComponent(filename)}`)
+  }, [navigate])
 
   const handleRetry = useCallback(() => {
     setStatus(SEARCH_STATUS.IDLE)
@@ -315,8 +372,18 @@ export function SearchPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-          className="text-center mb-20"
+          className="text-center mb-20 relative"
         >
+          {/* Theme Toggle - positioned absolutely */}
+          <button 
+            onClick={toggleTheme}
+            className="theme-toggle absolute top-0 right-0"
+            aria-label="Toggle theme"
+          >
+            <Sun className="sun-icon text-yellow-500" />
+            <Moon className="moon-icon text-blue-400" />
+          </button>
+          
           <div className="mb-6">
             <h1 className="text-6xl sm:text-7xl font-bold tracking-tight text-center">
               <div className="accent-gradient mb-2">FAE</div>
@@ -486,6 +553,7 @@ export function SearchPage() {
                   key={`${result.filename}-${index}`}
                   result={result}
                   onClick={openDocument}
+                  searchQuery={debouncedQuery}
                 />
               ))}
             </motion.div>
