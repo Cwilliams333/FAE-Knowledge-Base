@@ -36,7 +36,7 @@ export function InlineCode({ children, type = 'default' }: InlineCodeProps) {
   const styles = codeStyles[theme][type]
   
   return (
-    <code className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[0.85em] font-mono border ${styles} transition-all duration-200 hover:scale-105`}>
+    <code className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[0.85em] font-mono border ${styles} transition-colors duration-200 hover:brightness-110 cursor-pointer select-all`}>
       {children}
     </code>
   )

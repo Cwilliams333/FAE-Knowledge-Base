@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Search, Hash, Sun, Moon, Copy, Check } from 'lucide-react'
+import { ArrowLeft, FileText, Search, Hash, Sun, Moon, Copy, Check, Loader2, X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkSlug from 'remark-slug'
@@ -61,6 +61,166 @@ function TableOfContents({ toc, activeId, onItemClick }: {
           ))}
         </nav>
       </div>
+    </div>
+  )
+}
+
+interface SearchResult {
+  filename: string
+  content: string
+  highlight?: string
+  score: number
+}
+
+// Mini search component for the header
+function HeaderSearch() {
+  const navigate = useNavigate()
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [isOpen, setIsOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Search API call
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([])
+      setLoading(false)
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setLoading(true)
+      try {
+        const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'http://172.20.32.1:5000'
+        const response = await fetch(`${apiBaseUrl}/search`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setResults(data.results.slice(0, 5)) // Show top 5 results
+        }
+      } catch (error) {
+        console.error('Search error:', error)
+      } finally {
+        setLoading(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [query])
+
+  const handleResultClick = (filename: string) => {
+    navigate(`/document/${encodeURIComponent(filename)}`)
+    setIsOpen(false)
+    setQuery('')
+  }
+
+  const handleSearchFocus = () => {
+    setIsOpen(true)
+  }
+
+  const clearSearch = () => {
+    setQuery('')
+    setResults([])
+    setIsOpen(false)
+    inputRef.current?.blur()
+  }
+
+  return (
+    <div ref={searchRef} className="relative">
+      <div className={`relative transition-all duration-300 ${isOpen ? 'w-80' : 'w-64'}`}>
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="Search docs..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={handleSearchFocus}
+          className="w-full pl-9 pr-9 py-2 text-sm bg-background border rounded-lg 
+                   focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50
+                   transition-all duration-200 placeholder:text-muted-foreground"
+          style={{ borderColor: 'hsl(var(--color-border))' }}
+        />
+        {query && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        {loading && (
+          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
+        )}
+      </div>
+
+      {/* Search Results Dropdown */}
+      {isOpen && (query || results.length > 0) && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-background border rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
+             style={{ borderColor: 'hsl(var(--color-border))' }}>
+          {loading && query ? (
+            <div className="p-4 text-center text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+              Searching...
+            </div>
+          ) : results.length > 0 ? (
+            <div className="py-2">
+              {results.map((result, index) => {
+                const title = result.filename.replace('.md', '').replace(/[-_]/g, ' ').replace(/\w\S*/g, (txt) => 
+                  txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+                )
+                return (
+                  <button
+                    key={`${result.filename}-${index}`}
+                    onClick={() => handleResultClick(result.filename)}
+                    className="w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors border-b last:border-b-0"
+                    style={{ borderColor: 'hsl(var(--color-border) / 0.3)' }}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <FileText className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-foreground text-sm truncate">{title}</div>
+                        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {result.content.substring(0, 100)}...
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+              <div className="px-4 py-2 border-t text-xs text-muted-foreground">
+                <button 
+                  onClick={() => navigate(`/?q=${encodeURIComponent(query)}`)}
+                  className="text-primary hover:text-primary-hover"
+                >
+                  See all results for "{query}"
+                </button>
+              </div>
+            </div>
+          ) : query && !loading ? (
+            <div className="p-4 text-center text-muted-foreground text-sm">
+              No results found for "{query}"
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }
@@ -201,7 +361,9 @@ export function DocumentViewer() {
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
+              <HeaderSearch />
+              
               <button 
                 onClick={toggleTheme}
                 className="theme-toggle"
@@ -216,8 +378,8 @@ export function DocumentViewer() {
                 className="hidden sm:flex items-center space-x-2 px-3 py-1.5 border text-muted-foreground hover:text-foreground rounded-md transition-colors"
                 style={{ borderColor: 'hsl(var(--color-border))' }}
               >
-                <Search className="h-4 w-4" />
-                <span>Search</span>
+                <ArrowLeft className="h-4 w-4" />
+                <span>Home</span>
               </button>
             </div>
           </div>
