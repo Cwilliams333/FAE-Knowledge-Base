@@ -31,7 +31,7 @@ services:
       - ES_PASSWORD=
       - INDEX_NAME=knowledge_base
       - DOCUMENTS_DIR=/app/documents
-      - FLASK_ENV=development
+      - FLASK_ENV=production
       - PORT=5000
     ports:
       - "5000:5000"
@@ -43,26 +43,21 @@ services:
     networks:
       - knowledge-net
     restart: unless-stopped
-    command: bash startup.sh  # Uses startup script
+    command: bash -c "python ingest.py && gunicorn --bind 0.0.0.0:5000 --workers 4 app:app"
 
-  # React frontend development server
+  # React frontend production server
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: kb-frontend
     ports:
-      - "5173:5173"  # Vite dev server port
-    volumes:
-      # Mount source code for hot reloading
-      - ./frontend:/app
-      # Prevent local node_modules from overriding container's
-      - /app/node_modules
+      - "5173:80"
+    depends_on:
+      - web
     networks:
       - knowledge-net
     restart: unless-stopped
-    environment:
-      - VITE_API_URL=http://web:5000
 
 volumes:
   es_data:

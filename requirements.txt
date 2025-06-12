@@ -1,6 +1,6 @@
-flask==3.0.0
-flask-cors==4.0.0
-elasticsearch==8.9.0
-markdown==3.5.1
-python-dotenv==1.0.0
-gunicorn==21.2.0
+flask==3.1.1
+flask-cors==6.0.1
+elasticsearch==8.18.1
+markdown==3.8
+python-dotenv==1.1.0
+gunicorn==23.0.0

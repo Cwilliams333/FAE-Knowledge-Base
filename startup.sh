@@ -1,4 +1,5 @@
 ﻿#!/bin/bash
+set -e
 
 echo "🚀 Starting FAE Knowledge Base..."
 

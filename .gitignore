@@ -44,3 +44,9 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Development notes and documentation
+Phases.md
+CLAUDE.md
+flaskUpdate.md
+.claude/

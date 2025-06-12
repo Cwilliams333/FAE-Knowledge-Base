@@ -4,6 +4,9 @@ WORKDIR /app
 
 # Install dependencies
 COPY requirements.txt .
+COPY requirements-dev.txt .
+COPY pytest.ini .
+COPY ./tests ./tests
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
@@ -20,5 +23,5 @@ RUN mkdir -p /app/documents
 # Expose port
 EXPOSE 5000
 
-# Use startup script as default command
-CMD ["bash", "startup.sh"]
+# Use Gunicorn as the production server
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "app:app"]

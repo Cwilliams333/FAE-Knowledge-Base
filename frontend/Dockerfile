@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files first for better Docker layer caching
 COPY package*.json ./
 
-# Install dependencies with legacy peer deps to resolve conflicts
-RUN npm install --legacy-peer-deps
+# Install dependencies
+RUN npm install
 
 # Copy rest of the application
 COPY . .

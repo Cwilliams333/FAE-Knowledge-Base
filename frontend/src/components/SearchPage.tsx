@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useSpring, useTransition, animated, config } from '@react-spring/web'
 import { Search, File, Zap, Database, AlertCircle, Loader2, Sun, Moon } from 'lucide-react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -43,6 +43,13 @@ const SearchResultItem = React.memo(({ result, onClick, searchQuery }: {
   onClick: (filename: string) => void 
   searchQuery: string
 }) => {
+  const [isHovered, setIsHovered] = useState(false)
+  
+  const itemAnimation = useSpring({
+    opacity: 1,
+    transform: isHovered ? 'translateY(-2px)' : 'translateY(0px)',
+    config: config.wobbly
+  })
   // Simple title highlighter (since title isn't markdown)
   const highlightTitle = (text: string, query: string) => {
     if (!query.trim()) return text
@@ -95,12 +102,10 @@ const SearchResultItem = React.memo(({ result, onClick, searchQuery }: {
   const highlightedTitle = highlightTitle(titleText, searchQuery)
 
   return (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
-    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-    whileHover={{ y: -2 }}
+  <animated.div
+    style={itemAnimation}
+    onMouseEnter={() => setIsHovered(true)}
+    onMouseLeave={() => setIsHovered(false)}
   >
     <Card 
       className="group cursor-pointer glass-effect premium-card sparkle-effect hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 ease-out"
@@ -150,7 +155,7 @@ const SearchResultItem = React.memo(({ result, onClick, searchQuery }: {
         </div>
       </CardContent>
     </Card>
-  </motion.div>
+  </animated.div>
   )
 })
 
@@ -288,87 +293,125 @@ export function SearchPage() {
     handleSearch()
   }, [handleSearch])
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
-    }
+  // Container animation using react-spring
+  const containerAnimation = useSpring({
+    opacity: status === SEARCH_STATUS.SUCCESS ? 1 : 0,
+    config: config.gentle
+  })
+
+  // Page section animations
+  const headerAnimation = useSpring({
+    from: { opacity: 0, transform: 'translateY(-20px)' },
+    to: { opacity: 1, transform: 'translateY(0px)' },
+    config: { ...config.gentle, duration: 800 }
+  })
+
+  const statsAnimation = useSpring({
+    from: { opacity: 0, transform: 'translateY(20px)' },
+    to: { opacity: 1, transform: 'translateY(0px)' },
+    delay: 200,
+    config: { ...config.gentle, duration: 800 }
+  })
+
+  const searchAnimation = useSpring({
+    from: { opacity: 0, transform: 'translateY(20px)' },
+    to: { opacity: 1, transform: 'translateY(0px)' },
+    delay: 400,
+    config: { ...config.gentle, duration: 800 }
+  })
+
+  // Results count transition
+  const resultsCountTransition = useTransition(status === SEARCH_STATUS.SUCCESS, {
+    from: { opacity: 0 },
+    enter: { opacity: 1 },
+    leave: { opacity: 0 },
+    config: config.gentle
+  })
+
+  const LoadingState = () => {
+    const loadingAnimation = useSpring({
+      from: { opacity: 0 },
+      to: { opacity: 1 },
+      config: config.gentle
+    })
+    
+    return (
+      <animated.div style={loadingAnimation} className="text-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+        <p className="text-slate-600 dark:text-slate-400">Searching...</p>
+      </animated.div>
+    )
   }
 
-  const LoadingState = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="text-center py-12"
-    >
-      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-      <p className="text-slate-600 dark:text-slate-400">Searching...</p>
-    </motion.div>
-  )
+  const EmptyState = () => {
+    const emptyAnimation = useSpring({
+      from: { opacity: 0, transform: 'translateY(20px)' },
+      to: { opacity: 1, transform: 'translateY(0px)' },
+      config: config.gentle
+    })
+    
+    return (
+      <animated.div style={emptyAnimation} className="text-center py-12">
+        <Search className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+          No Results for "{debouncedQuery}"
+        </h3>
+        <p className="text-slate-600 dark:text-slate-400">
+          Check the spelling or try a different search term.
+        </p>
+      </animated.div>
+    )
+  }
 
-  const EmptyState = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="text-center py-12"
-    >
-      <Search className="h-12 w-12 mx-auto mb-4 text-slate-400" />
-      <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-        No Results for "{debouncedQuery}"
-      </h3>
-      <p className="text-slate-600 dark:text-slate-400">
-        Check the spelling or try a different search term.
-      </p>
-    </motion.div>
-  )
+  const ErrorState = () => {
+    const errorAnimation = useSpring({
+      from: { opacity: 0, transform: 'translateY(20px)' },
+      to: { opacity: 1, transform: 'translateY(0px)' },
+      config: config.gentle
+    })
+    
+    return (
+      <animated.div style={errorAnimation} className="text-center py-12">
+        <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+          Search Error
+        </h3>
+        <p className="text-slate-600 dark:text-slate-400 mb-4">
+          {error || 'Something went wrong. Please try again.'}
+        </p>
+        <Button onClick={handleRetry} variant="outline">
+          Try Again
+        </Button>
+      </animated.div>
+    )
+  }
 
-  const ErrorState = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="text-center py-12"
-    >
-      <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-      <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-        Search Error
-      </h3>
-      <p className="text-slate-600 dark:text-slate-400 mb-4">
-        {error || 'Something went wrong. Please try again.'}
-      </p>
-      <Button onClick={handleRetry} variant="outline">
-        Try Again
-      </Button>
-    </motion.div>
-  )
-
-  const InitialState = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center py-12"
-    >
-      <Search className="h-12 w-12 mx-auto mb-4 text-slate-400" />
-      <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-        Search the Knowledge Base
-      </h3>
-      <p className="text-slate-600 dark:text-slate-400">
-        Enter a search term to find relevant documentation.
-      </p>
-    </motion.div>
-  )
+  const InitialState = () => {
+    const initialAnimation = useSpring({
+      from: { opacity: 0, transform: 'translateY(20px)' },
+      to: { opacity: 1, transform: 'translateY(0px)' },
+      config: config.gentle
+    })
+    
+    return (
+      <animated.div style={initialAnimation} className="text-center py-12">
+        <Search className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+          Search the Knowledge Base
+        </h3>
+        <p className="text-slate-600 dark:text-slate-400">
+          Enter a search term to find relevant documentation.
+        </p>
+      </animated.div>
+    )
+  }
 
   return (
     <div className="relative min-h-screen premium-bg">
       <div className="max-w-4xl mx-auto px-6 py-20 sm:py-28">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+        <animated.div
+          style={headerAnimation}
           className="text-center mb-20 relative"
         >
           {/* Theme Toggle - positioned absolutely */}
@@ -391,13 +434,11 @@ export function SearchPage() {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium animate-float" style={{ animationDelay: '1s' }}>
             Search through documentation, guides, and knowledge insights
           </p>
-        </motion.div>
+        </animated.div>
 
         {/* Stats Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+        <animated.div
+          style={statsAnimation}
           className="mb-12"
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -443,13 +484,11 @@ export function SearchPage() {
               </CardContent>
             </Card>
           </div>
-        </motion.div>
+        </animated.div>
 
         {/* Search Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
+        <animated.div
+          style={searchAnimation}
           className="mb-16"
         >
           <Card className="glass-effect border-border/50 shadow-2xl shadow-primary/5 animate-pulse-border">
@@ -513,50 +552,39 @@ export function SearchPage() {
               </Button>
             </CardContent>
           </Card>
-        </motion.div>
+        </animated.div>
 
         {/* Results Count */}
-        <AnimatePresence>
-          {status === SEARCH_STATUS.SUCCESS && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="mb-6"
-            >
+        {resultsCountTransition((style, item) =>
+          item ? (
+            <animated.div style={style} className="mb-6">
               <p className="text-slate-600 dark:text-slate-400 text-center">
                 Found <strong>{total}</strong> results
               </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </animated.div>
+          ) : null
+        )}
 
         {/* Main Content Area */}
-        <AnimatePresence mode="wait">
-          {status === SEARCH_STATUS.IDLE && <InitialState key="initial" />}
-          {status === SEARCH_STATUS.LOADING && <LoadingState key="loading" />}
-          {status === SEARCH_STATUS.EMPTY && <EmptyState key="empty" />}
-          {status === SEARCH_STATUS.ERROR && <ErrorState key="error" />}
-          {status === SEARCH_STATUS.SUCCESS && (
-            <motion.div
-              key="results"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              className="space-y-4"
-            >
-              {results.map((result, index) => (
-                <SearchResultItem
-                  key={`${result.filename}-${index}`}
-                  result={result}
-                  onClick={openDocument}
-                  searchQuery={debouncedQuery}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {status === SEARCH_STATUS.IDLE && <InitialState />}
+        {status === SEARCH_STATUS.LOADING && <LoadingState />}
+        {status === SEARCH_STATUS.EMPTY && <EmptyState />}
+        {status === SEARCH_STATUS.ERROR && <ErrorState />}
+        {status === SEARCH_STATUS.SUCCESS && (
+          <animated.div
+            style={containerAnimation}
+            className="space-y-4"
+          >
+            {results.map((result, index) => (
+              <SearchResultItem
+                key={`${result.filename}-${index}`}
+                result={result}
+                onClick={openDocument}
+                searchQuery={debouncedQuery}
+              />
+            ))}
+          </animated.div>
+        )}
 
         {/* Custom Quick Search Dialog */}
         {open && (
