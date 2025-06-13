@@ -61,10 +61,10 @@ jobs:
     - name: Build and start services
       run: |
         # Build production images first
-        docker-compose build
+        docker compose build
         
         # Start services with test configuration
-        docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+        docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
         
     - name: Wait for services to be ready
       run: |
@@ -76,30 +76,30 @@ jobs:
         
     - name: Install backend test dependencies
       run: |
-        docker-compose exec -T web pip install -r requirements-dev.txt
+        docker compose exec -T web pip install -r requirements-dev.txt
         
     - name: Run backend tests
       run: |
-        docker-compose exec -T web python -m pytest tests/ -v --tb=short
+        docker compose exec -T web python -m pytest tests/ -v --tb=short
         
     - name: Install frontend test dependencies (if not already installed)
       run: |
-        docker-compose exec -T frontend-dev npm install
+        docker compose exec -T frontend-dev npm install
         
     - name: Run frontend tests
       run: |
-        docker-compose exec -T frontend-dev npm test -- --run
+        docker compose exec -T frontend-dev npm test -- --run
         
     - name: Collect test logs on failure
       if: failure()
       run: |
         echo "=== Docker Compose Logs ==="
-        docker-compose logs
+        docker compose logs
         
     - name: Clean up
       if: always()
       run: |
-        docker-compose down -v
+        docker compose down -v
         docker system prune -f
 
   build-and-push:
