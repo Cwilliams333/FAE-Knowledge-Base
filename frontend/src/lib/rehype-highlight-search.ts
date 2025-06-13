@@ -36,19 +36,19 @@ export const rehypeHighlightSearch = (searchTerm?: string) => {
           newChildren.push({
             type: 'text',
             value: node.value.slice(lastIndex, match.index),
-          });
+          } as Text);
         }
 
         // 2. Create the <span> element for the match (matching backend format)
-        const markElement = {
+        const markElement: Element = {
           type: 'element',
           tagName: 'span',
           properties: { 
             className: ['highlight'] 
           },
-          children: [{ type: 'text', value: match[0] }],
+          children: [{ type: 'text', value: match[0] } as Text],
         };
-        newChildren.push(markElement);
+        newChildren.push(markElement as Element);
 
         lastIndex = regex.lastIndex;
       }
@@ -58,7 +58,7 @@ export const rehypeHighlightSearch = (searchTerm?: string) => {
         newChildren.push({
           type: 'text',
           value: node.value.slice(lastIndex),
-        });
+        } as Text);
       }
 
       // Replace the original text node with our new array of nodes

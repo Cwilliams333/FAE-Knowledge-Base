@@ -20,12 +20,6 @@ const SEARCH_STATUS = {
   ERROR: 'error'
 } as const
 
-// Type for markdown component props
-interface MarkdownComponentProps {
-  children?: ReactNode
-  node?: unknown
-  [key: string]: unknown
-}
 
 type SearchStatus = typeof SEARCH_STATUS[keyof typeof SEARCH_STATUS]
 
@@ -80,18 +74,18 @@ const SearchResultItem = React.memo(({ result, onClick, searchQuery }: {
         rehypePlugins={[[rehypeHighlightSearch, searchQuery]]}
         components={{
           // Style markdown elements nicely
-          p: ({ children, ...props }: MarkdownComponentProps) => <p {...props} className="mb-2 leading-relaxed">{children}</p>,
-          h1: ({ children, ...props }: MarkdownComponentProps) => <h1 {...props} className="text-xl font-bold mb-2">{children}</h1>,
-          h2: ({ children, ...props }: MarkdownComponentProps) => <h2 {...props} className="text-lg font-bold mb-2">{children}</h2>,
-          h3: ({ children, ...props }: MarkdownComponentProps) => <h3 {...props} className="text-md font-bold mb-1">{children}</h3>,
-          strong: ({ children, ...props }: MarkdownComponentProps) => <strong {...props} className="font-bold">{children}</strong>,
-          em: ({ children, ...props }: MarkdownComponentProps) => <em {...props} className="italic">{children}</em>,
-          code: ({ children, ...props }: MarkdownComponentProps) => <code {...props} className="bg-muted px-1 py-0.5 rounded text-sm font-mono">{children}</code>,
-          pre: ({ children, ...props }: MarkdownComponentProps) => <pre {...props} className="bg-muted p-2 rounded overflow-x-auto mb-2">{children}</pre>,
-          blockquote: ({ children, ...props }: MarkdownComponentProps) => <blockquote {...props} className="border-l-4 border-muted-foreground/20 pl-4 italic mb-2">{children}</blockquote>,
-          ul: ({ children, ...props }: MarkdownComponentProps) => <ul {...props} className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
-          ol: ({ children, ...props }: MarkdownComponentProps) => <ol {...props} className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-          li: ({ children, ...props }: MarkdownComponentProps) => <li {...props}>{children}</li>
+          p: ({ children, ...props }) => <p {...props} className="mb-2 leading-relaxed">{children}</p>,
+          h1: ({ children, ...props }) => <h1 {...props} className="text-xl font-bold mb-2">{children}</h1>,
+          h2: ({ children, ...props }) => <h2 {...props} className="text-lg font-bold mb-2">{children}</h2>,
+          h3: ({ children, ...props }) => <h3 {...props} className="text-md font-bold mb-1">{children}</h3>,
+          strong: ({ children, ...props }) => <strong {...props} className="font-bold">{children}</strong>,
+          em: ({ children, ...props }) => <em {...props} className="italic">{children}</em>,
+          code: ({ children, ...props }) => <code {...props} className="bg-muted px-1 py-0.5 rounded text-sm font-mono">{children}</code>,
+          pre: ({ children, ...props }) => <pre {...props} className="bg-muted p-2 rounded overflow-x-auto mb-2">{children}</pre>,
+          blockquote: ({ children, ...props }) => <blockquote {...props} className="border-l-4 border-muted-foreground/20 pl-4 italic mb-2">{children}</blockquote>,
+          ul: ({ children, ...props }) => <ul {...props} className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+          ol: ({ children, ...props }) => <ol {...props} className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+          li: ({ children, ...props }) => <li {...props}>{children}</li>
         }}
       >
         {text}
