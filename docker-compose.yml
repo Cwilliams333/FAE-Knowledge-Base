@@ -1,7 +1,7 @@
 services:
   # The core Elasticsearch database
   elasticsearch:
-    image: elasticsearch:8.9.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
     container_name: es-knowledge-base
     environment:
       - discovery.type=single-node

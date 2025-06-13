@@ -1,6 +1,6 @@
 flask==3.1.1
 flask-cors==6.0.1
-elasticsearch==8.18.1
+elasticsearch==9.0.2
 markdown==3.8
 python-dotenv==1.1.0
 gunicorn==23.0.0
