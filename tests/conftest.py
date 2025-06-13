@@ -12,8 +12,8 @@ import time
 import os
 
 
-# Test Configuration
-TEST_API_BASE_URL = "http://172.20.32.1:5000"
+# Test Configuration - Use localhost in CI, WSL gateway locally
+TEST_API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
 TEST_TIMEOUT = 30  # seconds
 
 

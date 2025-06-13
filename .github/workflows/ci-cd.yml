@@ -86,7 +86,7 @@ jobs:
         
     - name: Run backend tests
       run: |
-        timeout 300s docker compose exec -T web python -m pytest tests/ -v --tb=short --timeout=120
+        timeout 300s docker compose exec -T -e API_BASE_URL=http://localhost:5000 web python -m pytest tests/ -v --tb=short --timeout=120
         
     - name: Install frontend test dependencies (if not already installed)
       run: |
