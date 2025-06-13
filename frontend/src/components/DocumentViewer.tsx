@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Search, Sun, Moon, Copy, Check, Loader2, X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
@@ -11,6 +11,7 @@ import { remarkTocExtractor } from '@/lib/remark-toc-extractor'
 import type { TocEntry } from '@/lib/remark-toc-extractor'
 import { useTheme } from '@/contexts/ThemeContext'
 import { InlineCode, detectCodeType } from '@/components/InlineCode'
+import type { Components } from 'react-markdown'
 
 interface DocumentData {
   filename: string
@@ -19,6 +20,96 @@ interface DocumentData {
     title?: string
     description?: string
   }
+}
+
+// Type for code component props based on react-markdown
+interface CodeProps {
+  children?: ReactNode
+  className?: string
+  inline?: boolean
+  node?: any
+}
+
+// Type for pre component props
+interface PreProps {
+  children?: ReactNode
+  node?: any
+}
+
+// Separate component for code blocks to properly use hooks
+function CodeBlock({ language, codeContent, theme }: { language: string | null, codeContent: string, theme: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(codeContent)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="relative group my-6 rounded-xl overflow-hidden border border-border bg-background-code shadow-sm">
+      {/* Code block header */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-background-surface">
+        <div className="flex items-center space-x-3">
+          {/* Mac-style window controls */}
+          <div className="flex items-center space-x-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <div className="w-3 h-3 rounded-full bg-green-500" />
+          </div>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            {language || 'code'}
+          </span>
+        </div>
+        <button
+          onClick={handleCopy}
+          className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md 
+                   text-muted-foreground hover:text-foreground hover:bg-muted 
+                   transition-all duration-200 opacity-0 group-hover:opacity-100"
+          aria-label="Copy code"
+        >
+          {copied ? (
+            <>
+              <Check className="h-3.5 w-3.5 text-green-500" />
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-3.5 w-3.5" />
+              <span>Copy</span>
+            </>
+          )}
+        </button>
+      </div>
+      
+      {/* Code content */}
+      <div className="relative">
+        <SyntaxHighlighter
+          language={language || 'plaintext'}
+          style={theme === 'dark' ? vscDarkPlus : vs}
+          customStyle={{
+            margin: 0,
+            padding: '1.25rem',
+            background: 'transparent',
+            fontSize: '0.875rem',
+            lineHeight: '1.7',
+            fontFamily: 'var(--font-mono)',
+          }}
+          showLineNumbers={codeContent.split('\n').length > 5}
+          lineNumberStyle={{
+            color: theme === 'dark' ? '#4a5568' : '#cbd5e0',
+            fontSize: '0.75rem',
+            paddingRight: '1rem',
+            userSelect: 'none'
+          }}
+          wrapLines={true}
+          wrapLongLines={true}
+        >
+          {codeContent}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  )
 }
 
 function TableOfContents({ toc, activeId, onItemClick }: { 
@@ -410,7 +501,7 @@ export function DocumentViewer() {
                                prose-li:marker:text-primary/60
                                animate-fade-in">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkSlug, [remarkTocExtractor as any, { onTocExtracted: handleTocExtracted }]] as any}
+                remarkPlugins={[remarkGfm, remarkSlug, [remarkTocExtractor, { onTocExtracted: handleTocExtracted }]]}
                 components={{
                   h1: ({ children, ...props }) => (
                     <h1 className="text-4xl font-bold mt-12 mb-6 text-foreground tracking-tight" {...props}>
@@ -459,7 +550,7 @@ export function DocumentViewer() {
                       {children}
                     </blockquote>
                   ),
-                  code: ({ children, className, inline }: any) => {
+                  code: ({ children, className, inline }: CodeProps) => {
                     // Check if it's inline code
                     if (inline || !className) {
                       const codeContent = String(children).trim()
@@ -470,82 +561,11 @@ export function DocumentViewer() {
                     // It's a code block
                     const match = /language-(\w+)/.exec(className || '')
                     const language = match ? match[1] : null
-                    
-                    const [copied, setCopied] = useState(false)
                     const codeContent = String(children).replace(/\n$/, '')
 
-                    const handleCopy = () => {
-                      navigator.clipboard.writeText(codeContent)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 2000)
-                    }
-
-                    return (
-                      <div className="relative group my-6 rounded-xl overflow-hidden border border-border bg-background-code shadow-sm">
-                        {/* Code block header */}
-                        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-background-surface">
-                          <div className="flex items-center space-x-3">
-                            {/* Mac-style window controls */}
-                            <div className="flex items-center space-x-1.5">
-                              <div className="w-3 h-3 rounded-full bg-red-500" />
-                              <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                              <div className="w-3 h-3 rounded-full bg-green-500" />
-                            </div>
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                              {language || 'code'}
-                            </span>
-                          </div>
-                          <button
-                            onClick={handleCopy}
-                            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md 
-                                     text-muted-foreground hover:text-foreground hover:bg-muted 
-                                     transition-all duration-200 opacity-0 group-hover:opacity-100"
-                            aria-label="Copy code"
-                          >
-                            {copied ? (
-                              <>
-                                <Check className="h-3.5 w-3.5 text-green-500" />
-                                <span>Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-3.5 w-3.5" />
-                                <span>Copy</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                        
-                        {/* Code content */}
-                        <div className="relative">
-                          <SyntaxHighlighter
-                            language={language || 'plaintext'}
-                            style={theme === 'dark' ? vscDarkPlus : vs}
-                            customStyle={{
-                              margin: 0,
-                              padding: '1.25rem',
-                              background: 'transparent',
-                              fontSize: '0.875rem',
-                              lineHeight: '1.7',
-                              fontFamily: 'var(--font-mono)',
-                            }}
-                            showLineNumbers={codeContent.split('\n').length > 5}
-                            lineNumberStyle={{
-                              color: theme === 'dark' ? '#4a5568' : '#cbd5e0',
-                              fontSize: '0.75rem',
-                              paddingRight: '1rem',
-                              userSelect: 'none'
-                            }}
-                            wrapLines={true}
-                            wrapLongLines={true}
-                          >
-                            {codeContent}
-                          </SyntaxHighlighter>
-                        </div>
-                      </div>
-                    )
+                    return <CodeBlock language={language} codeContent={codeContent} theme={theme} />
                   },
-                  pre: ({ children }: any) => {
+                  pre: ({ children }: PreProps) => {
                     // Return children directly since we're handling the wrapper in the code component
                     return <>{children}</>
                   }
