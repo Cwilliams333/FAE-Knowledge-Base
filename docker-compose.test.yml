@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  # Override web service for testing
+  web:
+    environment:
+      - FLASK_ENV=testing
+      - INDEX_NAME=knowledge_base_test
