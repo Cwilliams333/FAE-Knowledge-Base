@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 from datetime import datetime
 from elasticsearch import Elasticsearch
 import urllib3
@@ -9,12 +10,12 @@ import hashlib
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Configuration from environment
-ES_HOST = os.getenv('ES_HOST', 'http://localhost:9200')
-ES_USER = os.getenv('ES_USER', '')  # Empty string if not set
-ES_PASSWORD = os.getenv('ES_PASSWORD', '')  # Empty string if not set
-INDEX_NAME = os.getenv('INDEX_NAME', 'knowledge_base')
-DOCUMENTS_DIR = os.getenv('DOCUMENTS_DIR', '/app/documents')
+# Global variables (will be set by parse_args or environment)
+ES_HOST = None
+ES_USER = None  
+ES_PASSWORD = None
+INDEX_NAME = None
+DOCUMENTS_DIR = None
 
 def connect_elasticsearch():
     """Connect to Elasticsearch with retry logic"""
@@ -176,7 +177,31 @@ def watch_mode(es):
             print(f"Error in watch mode: {e}")
             time.sleep(30)
 
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description='Index documents into Elasticsearch')
+    parser.add_argument('--path', default=None, help='Directory containing documents to index')
+    parser.add_argument('--index', default=None, help='Elasticsearch index name')
+    parser.add_argument('--es-host', default=None, help='Elasticsearch host URL')
+    parser.add_argument('--watch', action='store_true', help='Watch for changes and continuously reindex')
+    return parser.parse_args()
+
+def configure_globals(args):
+    """Configure global variables from args and environment"""
+    global ES_HOST, ES_USER, ES_PASSWORD, INDEX_NAME, DOCUMENTS_DIR
+    
+    # Configuration from args first, then environment defaults
+    ES_HOST = args.es_host or os.getenv('ES_HOST', 'http://localhost:9200')
+    ES_USER = os.getenv('ES_USER', '')  # Only from environment
+    ES_PASSWORD = os.getenv('ES_PASSWORD', '')  # Only from environment  
+    INDEX_NAME = args.index or os.getenv('INDEX_NAME', 'knowledge_base')
+    DOCUMENTS_DIR = args.path or os.getenv('DOCUMENTS_DIR', '/app/documents')
+
 if __name__ == "__main__":
+    # Parse command line arguments
+    args = parse_args()
+    configure_globals(args)
+    
     # Connect to Elasticsearch
     es = connect_elasticsearch()
     
@@ -186,6 +211,6 @@ if __name__ == "__main__":
     # Initial indexing
     index_documents(es)
     
-    # Watch for changes if in Docker
-    if os.getenv('WATCH_MODE', 'false').lower() == 'true':
+    # Watch for changes if requested or in Docker with WATCH_MODE
+    if args.watch or os.getenv('WATCH_MODE', 'false').lower() == 'true':
         watch_mode(es)

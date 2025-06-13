@@ -163,7 +163,59 @@ def sample_document_response():
     }
 
 
-# Auto-use fixtures
+# Test data seeding
+@pytest.fixture(scope="session", autouse=True) 
+def seed_elasticsearch():
+    """
+    Seed Elasticsearch with test documents before running tests.
+    
+    This fixture runs once per test session to populate the test index
+    with documents from test_documents/ directory.
+    """
+    import subprocess
+    import time
+    from elasticsearch import Elasticsearch
+    
+    # Wait for Elasticsearch to be ready
+    es_url = "http://localhost:5000"  # This will work in CI/CD
+    test_index = "knowledge_base_test"
+    
+    # Wait for ES to be available through the Flask app
+    max_retries = 30
+    for i in range(max_retries):
+        try:
+            response = requests.get(f"http://localhost:5000/health", timeout=5)
+            if response.status_code in [200, 503]:
+                break
+        except:
+            if i < max_retries - 1:
+                time.sleep(2)
+            else:
+                pytest.fail("Elasticsearch not ready for seeding")
+    
+    # Run ingest.py to seed test documents
+    try:
+        subprocess.check_call([
+            "python", "/app/ingest.py",
+            "--path", "/app/test_documents",
+            "--index", test_index,
+            "--es-host", "http://elasticsearch:9200"
+        ])
+        print(f"✓ Seeded test index '{test_index}' with test documents")
+    except subprocess.CalledProcessError as e:
+        pytest.fail(f"Failed to seed test documents: {e}")
+    
+    yield  # Run tests
+    
+    # Cleanup: Delete test index (optional, helps keep ES clean)
+    try:
+        es = Elasticsearch("http://elasticsearch:9200")
+        es.indices.delete(index=test_index, ignore=[400, 404])
+        print(f"✓ Cleaned up test index '{test_index}'")
+    except:
+        pass  # Ignore cleanup errors
+
+# Auto-use fixtures  
 @pytest.fixture(autouse=True)
 def setup_test_environment(wait_for_api):
     """

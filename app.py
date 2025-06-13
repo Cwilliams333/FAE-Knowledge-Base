@@ -24,7 +24,7 @@ CORS(app, resources={r"/*": {"origins": ["http://172.20.32.1:5173", "http://loca
 ES_HOST = os.getenv('ES_HOST', 'http://localhost:9200')
 ES_USER = os.getenv('ES_USER', '')  # Empty string if not set
 ES_PASSWORD = os.getenv('ES_PASSWORD', '')  # Empty string if not set
-INDEX_NAME = os.getenv('INDEX_NAME', 'knowledge_base')
+INDEX_NAME = os.getenv('INDEX_NAME', 'knowledge_base_test' if os.getenv('FLASK_ENV') == 'testing' else 'knowledge_base')
 
 # Wait for Elasticsearch to be ready
 def wait_for_elasticsearch(max_retries=30):
