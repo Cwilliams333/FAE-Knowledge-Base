@@ -72,7 +72,7 @@ jobs:
         timeout 120s bash -c 'until curl -f http://localhost:9200/_cluster/health; do sleep 5; done'
         
         echo "Waiting for Flask API to be ready..."
-        timeout 60s bash -c 'until curl -f http://localhost:5000/api/health; do sleep 5; done'
+        timeout 60s bash -c 'until curl -f http://localhost:5000/health; do sleep 5; done'
         
     - name: Install backend test dependencies
       run: |
