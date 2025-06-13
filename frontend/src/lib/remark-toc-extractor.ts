@@ -1,6 +1,6 @@
 import { visit } from 'unist-util-visit'
-import type { Plugin } from 'unified'
 import type { Root, Heading } from 'mdast'
+import type { Plugin } from 'unified'
 
 export interface TocEntry {
   id: string
@@ -8,10 +8,17 @@ export interface TocEntry {
   depth: number
 }
 
-// Export the type separately for better compatibility
+interface TocExtractorOptions {
+  onTocExtracted: (toc: TocEntry[]) => void
+}
 
-export const remarkTocExtractor: Plugin<[{ onTocExtracted: (toc: TocEntry[]) => void }], Root> = 
-  ({ onTocExtracted }) => (tree) => {
+export const remarkTocExtractor: Plugin<[TocExtractorOptions], Root> = (options) => {
+  if (!options?.onTocExtracted) {
+    console.error('remarkTocExtractor: `onTocExtracted` option is required.')
+    return
+  }
+
+  return (tree: Root) => {
     const toc: TocEntry[] = []
     
     visit(tree, 'heading', (node: Heading) => {
@@ -38,6 +45,7 @@ export const remarkTocExtractor: Plugin<[{ onTocExtracted: (toc: TocEntry[]) => 
     
     // Use setTimeout to defer the state update until after render
     setTimeout(() => {
-      onTocExtracted(toc)
+      options.onTocExtracted(toc)
     }, 0)
   }
+}

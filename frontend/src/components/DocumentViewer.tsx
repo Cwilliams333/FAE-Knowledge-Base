@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Search, Sun, Moon, Copy, Check, Loader2, X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import remarkSlug from 'remark-slug'
+import rehypeSlug from 'rehype-slug'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism'
@@ -500,7 +500,8 @@ export function DocumentViewer() {
                                prose-li:marker:text-primary/60
                                animate-fade-in">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkSlug, [remarkTocExtractor, { onTocExtracted: handleTocExtracted }]]}
+                remarkPlugins={[remarkGfm, [remarkTocExtractor, { onTocExtracted: handleTocExtracted }]]}
+                rehypePlugins={[rehypeSlug]}
                 components={{
                   h1: ({ children, ...props }) => (
                     <h1 className="text-4xl font-bold mt-12 mb-6 text-foreground tracking-tight" {...props}>
