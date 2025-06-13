@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, type ReactNode } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSpring, useTransition, animated, config } from '@react-spring/web'
 import { Search, File, Zap, Database, AlertCircle, Loader2, Sun, Moon } from 'lucide-react'
