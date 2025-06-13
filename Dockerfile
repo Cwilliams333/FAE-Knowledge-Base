@@ -8,6 +8,7 @@ COPY requirements-dev.txt .
 COPY pytest.ini .
 COPY ./tests ./tests
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # Copy application files
 COPY app.py .
