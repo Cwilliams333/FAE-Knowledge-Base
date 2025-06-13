@@ -11,7 +11,6 @@ import { remarkTocExtractor } from '@/lib/remark-toc-extractor'
 import type { TocEntry } from '@/lib/remark-toc-extractor'
 import { useTheme } from '@/contexts/ThemeContext'
 import { InlineCode, detectCodeType } from '@/components/InlineCode'
-import type { Components } from 'react-markdown'
 
 interface DocumentData {
   filename: string
@@ -27,13 +26,13 @@ interface CodeProps {
   children?: ReactNode
   className?: string
   inline?: boolean
-  node?: any
+  node?: unknown
 }
 
 // Type for pre component props
 interface PreProps {
   children?: ReactNode
-  node?: any
+  node?: unknown
 }
 
 // Separate component for code blocks to properly use hooks
