@@ -23,9 +23,9 @@ const SEARCH_STATUS = {
 // Type for markdown component props
 interface MarkdownComponentProps {
   children?: ReactNode
-  node?: any
-  [key: string]: any
-} as const
+  node?: unknown
+  [key: string]: unknown
+}
 
 type SearchStatus = typeof SEARCH_STATUS[keyof typeof SEARCH_STATUS]
 

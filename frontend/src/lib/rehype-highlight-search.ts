@@ -1,4 +1,5 @@
 import { visit, SKIP } from 'unist-util-visit';
+import type { Element, Text, Parent, Root } from 'hast';
 
 // Rehype plugin to highlight search terms in markdown content
 export const rehypeHighlightSearch = (searchTerm?: string) => {
@@ -7,9 +8,9 @@ export const rehypeHighlightSearch = (searchTerm?: string) => {
   }
 
   // This is the "transformer" function that receives the HAST tree
-  return (tree: any) => {
+  return (tree: Root) => {
     // We use `visit` to find all 'text' nodes in the tree
-    visit(tree, 'text', (node: any, index: any, parent: any) => {
+    visit(tree, 'text', (node: Text, index: number | undefined, parent: Parent | undefined) => {
       // We only care about text nodes within elements
       if (!parent || typeof index !== 'number') return;
 
@@ -22,7 +23,7 @@ export const rehypeHighlightSearch = (searchTerm?: string) => {
       }
 
       // We found a match. Now we need to split the text node into multiple nodes
-      const newChildren: any[] = [];
+      const newChildren: (Text | Element)[] = [];
       let lastIndex = 0;
       let match;
 
