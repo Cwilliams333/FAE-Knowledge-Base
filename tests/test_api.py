@@ -3,6 +3,9 @@ Comprehensive test suite for FAE Knowledge Base API.
 
 This module tests all API endpoints using modern pytest patterns,
 focusing on both success and error cases with proper isolation.
+
+Note: Tests use documents from test_documents/ directory which are
+indexed by the separate ingest microservice before tests run.
 """
 
 import pytest

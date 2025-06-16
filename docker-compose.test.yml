@@ -1,8 +1,80 @@
 version: '3.8'
 
 services:
-  # Override web service for testing
-  web:
+  # Elasticsearch for testing (isolated test instance)
+  elasticsearch:
     environment:
-      - FLASK_ENV=testing
-      - INDEX_NAME=knowledge_base_test
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"  # Reduced memory for testing
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Test document ingestion service
+  ingest:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingest
+    environment:
+      - ES_HOST=http://elasticsearch:9200
+      - ES_USER=
+      - ES_PASSWORD=
+      - INDEX_NAME=knowledge_base_test  # Test-specific index
+      - DOCUMENTS_DIR=/app/test_documents  # Use test documents
+    volumes:
+      - ./test_documents:/app/test_documents  # Mount test documents instead
+      - ./tests:/app/tests  # Mount test files for access
+      - /tmp:/tmp  # Share tmp for completion signals
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/status/ingest_complete"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+  # Backend API service for testing
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      - ES_HOST=http://elasticsearch:9200
+      - ES_USER=
+      - ES_PASSWORD=
+      - INDEX_NAME=knowledge_base_test  # Test-specific index
+      - FLASK_ENV=testing  # Testing environment
+      - PORT=5000
+      - TESTING=true  # Additional test flag
+    # Override command to run tests after startup
+    command: >
+      sh -c "
+        # Wait for ingest to complete
+        while [ ! -f /app/status/ingest_complete ]; do
+          echo 'Waiting for document ingestion to complete...'
+          sleep 2
+        done
+        
+        # Start Flask app in background
+        python app.py &
+        
+        # Wait for Flask to be ready
+        sleep 5
+        
+        # Run tests
+        python -m pytest tests/ -v --tb=short
+        
+        # Keep container running for debugging if needed
+        tail -f /dev/null
+      "
+    volumes:
+      - ./tests:/app/tests  # Mount test directory
+      - ./test_documents:/app/test_documents  # Mount test documents
+      - /tmp:/tmp  # Share tmp for completion signals
+
+  # Skip frontend for testing (backend API tests only)
+  # frontend service is not needed for API testing
