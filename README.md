@@ -1,309 +1,380 @@
-# FAE Knowledge Base 🔍
+# 🚀 FAE Knowledge Base - Microservices Edition
 
-[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-3.0.0-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.1.1-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
 [![React](https://img.shields.io/badge/React-19.1.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Vite-6.3.5-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-4.1.8-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
-[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.9.0-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)](https://elastic.co)
+[![Docker](https://img.shields.io/badge/Docker-Microservices-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-9.0.0-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)](https://elastic.co)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 
-A modern, searchable knowledge base for engineering teams with **premium React frontend** and **one-command Docker setup**.
+**Enterprise-ready microservices knowledge base** with independent document ingestion, comprehensive testing, and automated CI/CD deployment.
 
 ![Knowledge Base Interface](2FAEfrontend.gif)
 
-## ✨ Features
+## 🎯 **What's New in Microservices Edition**
 
-- 📄 **Markdown Support** - Full rendering of markdown documents with syntax highlighting
-- 🔍 **Full-Text Search** - Powerful search across all documentation with highlighting
-- 🚀 **One-Command Setup** - Auto-indexing and startup with single Docker command
-- 📁 **Auto-Indexing** - Automatically indexes documents on container startup
-- 🎨 **Clean UI** - Modern, responsive search interface
-- 🐳 **Docker Ready** - Complete containerized deployment
-- 🔓 **No Authentication** - Simple, frictionless setup for internal teams
+### ✅ **Independent Services**
+- **🔄 Ingest Service** - Run document indexing whenever you want
+- **🌐 Backend API** - Starts only after successful ingestion  
+- **🧪 Test Runner** - Isolated testing environment
+- **📊 Elasticsearch** - Dedicated search engine
 
-## 🚀 Quick Start
+### ✅ **Enterprise CI/CD**
+- **🔒 Security Scanning** - Automated vulnerability detection
+- **🧪 25+ Integration Tests** - Comprehensive test coverage
+- **🚀 End-to-End Testing** - Full stack validation
+- **📦 Automated Deployment** - Production-ready pipelines
 
-### 1. Clone and Setup
+### ✅ **Developer Experience**
+- **⚡ Independent ingestion** - Update documents without downtime
+- **🛡️ Reliable orchestration** - Backend waits for successful ingestion
+- **🔧 Multiple environments** - Development, testing, production configs
+
+---
+
+## 🚀 **Quick Start**
+
+### **Option 1: Production Setup (Recommended)**
 ```bash
-git clone https://github.com/Cwilliams333/FAE-knowledge-base.git
-cd FAE-knowledge-base
+# Clone and start everything
+git clone https://github.com/Cwilliams333/FAE-Knowledge-Base.git
+cd FAE-Knowledge-Base
+
+# One command to rule them all
+docker compose up --build
 ```
 
-### 2. Add Your Documents
+**✨ What happens:**
+1. 📊 Elasticsearch starts and becomes healthy
+2. 🔄 Ingest service indexes your documents and exits
+3. 🌐 Backend API starts (only after successful ingestion)
+4. 🎉 **Ready!** Visit http://localhost:5000
+
+### **Option 2: Independent Document Updates**
 ```bash
-# Place your markdown files in the documents folder
-mkdir -p documents
-cp your-docs/*.md documents/
+# Add new documents anytime
+cp your-new-docs/*.md documents/
+
+# Run only ingestion (backend stays running!)
+docker compose up ingest
+
+# ✅ New documents are immediately searchable
 ```
 
-### 3. One Command to Start Everything
+### **Option 3: Development Mode**
 ```bash
-docker-compose up -d --build
+# Start with development configuration
+docker compose -f docker-compose.dev.yml up --build
 ```
 
-**That's it!** 🎉
+---
 
-- ⏳ Elasticsearch will start
-- 📄 All documents will be auto-indexed  
-- 🌐 Web interface will be available at http://localhost:5000
+## 🏗️ **Microservices Architecture**
 
-## 📁 Project Structure
+```mermaid
+graph TD
+    A[📁 Documents] --> B[🔄 Ingest Service]
+    B --> C[📊 Elasticsearch]
+    C --> D[🌐 Backend API]
+    D --> E[🎨 React Frontend]
+    
+    F[🧪 Test Runner] --> C
+    F --> D
+    
+    G[🔒 Security Scanner] --> H[🚀 CI/CD Pipeline]
+    I[📋 Integration Tests] --> H
+    J[🧪 E2E Tests] --> H
+    H --> K[🌍 Production Deploy]
+    
+    style B fill:#e1f5fe
+    style C fill:#fff3e0
+    style D fill:#f3e5f5
+    style E fill:#e8f5e8
+    style F fill:#fff8e1
 ```
-FAE-knowledge-base/
-├── docker-compose.yml      # Container orchestration
-├── Dockerfile             # Web app container config
-├── startup.sh             # Auto-ingest + web startup script
-├── app.py                 # Flask web application
-├── ingest.py              # Document indexer
-├── requirements.txt       # Python dependencies
-├── .env                   # Environment configuration
-├── documents/             # Your markdown files go here
-└── README.md              # This file
+
+### **🐳 Docker Images**
+- **`fae-knowledge-base-ingest`** - Document indexing service
+- **`fae-knowledge-base-backend`** - Flask API server  
+- **`fae-knowledge-base-test-runner`** - Testing environment
+- **`elasticsearch:9.0.0`** - Search engine
+
+### **🔄 Service Dependencies**
+- **Backend** waits for **ingest** to complete successfully
+- **Test runner** waits for both **elasticsearch** and **backend**
+- **Ingest** runs independently and exits when complete
+
+---
+
+## 📁 **Project Structure**
+
+```
+FAE-Knowledge-Base/
+├── 🐳 Docker Configuration
+│   ├── docker-compose.yml          # Production orchestration
+│   ├── docker-compose.dev.yml      # Development setup  
+│   ├── docker-compose.test.yml     # Testing environment
+│   ├── Dockerfile.backend          # Backend API image
+│   ├── Dockerfile.ingest           # Document indexing image
+│   └── Dockerfile.test             # Testing environment image
+│
+├── 🔧 Application Code
+│   ├── app.py                      # Flask backend API
+│   ├── ingest.py                   # Document indexing logic
+│   ├── ingest_wrapper.py           # Health monitoring wrapper
+│   └── test_runner.py              # Test orchestration
+│
+├── 🧪 Testing Infrastructure  
+│   ├── tests/                      # Test suites (25+ tests)
+│   ├── test_documents/             # Sample test data
+│   ├── pytest.ini                 # Test configuration
+│   └── scripts/                    # Testing scripts
+│
+├── 🚀 CI/CD Pipeline
+│   ├── .github/workflows/ci-cd.yml # Complete CI/CD automation
+│   └── .github/workflows/         # Additional workflows
+│
+├── 📊 Frontend (React + TypeScript)
+│   ├── frontend/src/               # React application  
+│   ├── frontend/components/        # UI components
+│   └── frontend/package.json       # Frontend dependencies
+│
+├── 📄 Documentation
+│   ├── README.md                   # This file
+│   ├── documents/                  # Your knowledge base content
+│   └── test_documents/             # Example documents
+│
+└── ⚙️ Configuration
+    ├── requirements.txt            # Python dependencies
+    ├── requirements-dev.txt        # Development dependencies
+    └── .env.example               # Environment template
 ```
 
-## 📖 Usage
+---
 
-### Adding New Documents
+## 🔄 **Document Management**
 
-After the initial setup, you can add new documents using either method:
-
-#### Method 1: Manual Indexing (Recommended) ⚡
+### **🚀 Independent Ingestion (Zero Downtime)**
 ```bash
-# Add files to documents folder
-cp new-file.md documents/
+# Add new documents to your knowledge base
+cp new-documentation/*.md documents/
 
-# Index new documents immediately
-docker exec kb-web python ingest.py
+# Run ingestion independently (backend stays running!)
+docker compose up ingest
+
+# ✅ Documents are immediately searchable
+# ✅ No service interruption
+# ✅ Backend automatically detects new content
 ```
-✅ **Fast & reliable** - New documents appear in search immediately
 
-#### Method 2: Full Rebuild (Complete Auto-Indexing Test) 🔄
+### **📊 Scheduled Updates**
 ```bash
-# Add files to documents folder  
-cp new-file.md documents/
+# Create a simple update script
+cat > update-docs.sh << 'EOF'
+#!/bin/bash
+echo "🔄 Updating knowledge base..."
+docker compose up ingest
+echo "✅ Update complete! Documents are now searchable."
+EOF
 
-# Rebuild containers to trigger auto-indexing
-docker-compose down && docker-compose up -d --build
+chmod +x update-docs.sh
+
+# Run anytime you want to update
+./update-docs.sh
 ```
-✅ **Tests full auto-indexing** - Takes 60 seconds but validates entire system
 
-#### ⚠️ Why `docker-compose restart web` doesn't work
-- **Restart** = stops and starts existing container
-- **Auto-indexing only runs on container creation**, not restart
-- Use **Method 1** (manual) for daily use or **Method 2** (rebuild) for testing
-
-### Searching
-- Type keywords in the search box
-- Click results to view formatted documents  
-- Use "View Raw" to see original markdown
-- Search supports fuzzy matching and highlighting
-
-### Supported File Types
-- `.md` - Markdown files (primary)
-- `.txt` - Plain text files
-- `.csv` - CSV files 
-- `.json` - JSON files
-
-## ⚙️ Configuration
-
-### Environment Variables (.env)
+### **🔍 Verify Ingestion**
 ```bash
-# Elasticsearch Configuration (no auth needed)
-ES_HOST=http://elasticsearch:9200
-ES_USER=
-ES_PASSWORD=
-
-# Application Configuration  
-INDEX_NAME=knowledge_base
-FLASK_ENV=development
-PORT=5000
-
-# Indexing Configuration
-DOCUMENTS_DIR=/app/documents
-WATCH_MODE=false
-```
-
-## 🛠️ Development
-
-### Local Development (without Docker)
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Start Elasticsearch
-docker run -d -p 9200:9200 -e "discovery.type=single-node" -e "xpack.security.enabled=false" elasticsearch:8.9.0
-
-# Index documents
-python ingest.py
-
-# Run the app
-python app.py
-```
-
-### Development Workflow
-```bash
-# Add new documents
-cp new-docs/*.md documents/
-
-# Quick indexing for development
-docker exec kb-web python ingest.py
-
-# View immediately at http://localhost:5000
-```
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Documents/    │───▶│   Elasticsearch  │◀───│   Flask Web     │
-│   (markdown)    │    │   (search index) │    │   (UI + API)    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                              │                         │
-                              │                         │
-                       ┌──────▼──────┐         ┌────────▼────────┐
-                       │   Auto-     │         │   Search UI     │
-                       │   Indexing  │         │   localhost:5000│
-                       └─────────────┘         └─────────────────┘
-```
-
-## 🔧 Monitoring & Health
-
-- **Health Check**: http://localhost:5000/health
-- **Elasticsearch**: http://localhost:9200
-- **Document Stats**: http://localhost:5000/stats
-- **Logs**: `docker-compose logs -f web`
-
-## 🔄 Common Commands
-
-### Startup & Management
-```bash
-# Initial setup - starts everything with auto-indexing
-docker-compose up -d --build
-
-# Check running status
-docker-compose ps
-
-# View real-time logs
-docker-compose logs -f web
-
-# Stop everything
-docker-compose down
-```
-
-### Document Management
-```bash
-# Add new documents (recommended method)
-cp new-file.md documents/
-docker exec kb-web python ingest.py
-
 # Check document count
 curl http://localhost:5000/stats
 
-# Test search
+# Test search functionality  
 curl -X POST http://localhost:5000/search \
   -H "Content-Type: application/json" \
   -d '{"query":"your search term"}'
+
+# Check backend health
+curl http://localhost:5000/health
 ```
 
-### Troubleshooting
+---
+
+## 🧪 **Testing Infrastructure**
+
+### **🏃‍♂️ Run Tests**
 ```bash
-# Clean restart (removes all data)
-docker-compose down -v && docker-compose up -d --build
+# Full test suite (25+ tests)
+scripts/test-new.sh
 
-# Force rebuild containers
-docker-compose build --no-cache
-docker-compose up -d
+# Quick smoke tests
+scripts/quick-test.sh
 
-# Check Elasticsearch directly
-curl http://localhost:9200
-curl http://localhost:9200/knowledge_base/_stats
+# Development testing
+docker compose -f docker-compose.test.yml up --abort-on-container-exit test-runner
 ```
 
-## 🐛 Troubleshooting
+### **📋 Test Categories**
+- **🔗 Health Endpoint Tests** - Service availability
+- **📊 Stats Endpoint Tests** - Document counting  
+- **🔍 Search Functionality** - Query processing
+- **📄 Document Retrieval** - Content access
+- **🛡️ Error Handling** - Edge case validation
+- **🔄 API Integration** - End-to-end workflows
 
-### Documents Not Appearing
-1. **Check documents folder**: Ensure `.md` files are in `documents/` directory
-2. **Manual re-index**: Run `docker exec kb-web python ingest.py`
-3. **Check logs**: `docker-compose logs web | grep -i "index\|document"`
-4. **Verify stats**: Visit http://localhost:5000/stats
-
-### Search Not Working
-1. **Test Elasticsearch**: `curl http://localhost:9200` (should return cluster info)
-2. **Check index**: `curl http://localhost:9200/knowledge_base/_stats`
-3. **Restart services**: `docker-compose restart`
-4. **Check browser console**: Look for JavaScript errors
-
-### Web Interface Not Loading
-1. **Port conflict**: Ensure port 5000 is available (`netstat -an | grep 5000`)
-2. **Container status**: `docker-compose ps` (web should show "Up")
-3. **Container logs**: `docker-compose logs web`
-4. **Health check**: `curl http://localhost:5000/health`
-
-### Auto-Indexing Not Working
-1. **Check startup.sh**: `docker exec kb-web cat startup.sh`
-2. **Container startup logs**: `docker logs kb-web | head -20`
-3. **Manual test**: `docker exec kb-web bash startup.sh`
-4. **Use manual indexing**: `docker exec kb-web python ingest.py`
-
-## 📝 What Changed from Original
-
-### Removed Complexity
-- ❌ **No Kibana** - Custom Flask UI only
-- ❌ **No Authentication** - No passwords or user management  
-- ❌ **No Manual Multi-Step Setup** - Everything automated
-
-### Added Simplicity  
-- ✅ **One Command Setup** - `docker-compose up -d --build`
-- ✅ **Auto-Indexing on Startup** - Documents indexed automatically on container creation
-- ✅ **Manual Indexing Option** - `docker exec kb-web python ingest.py` for quick updates
-- ✅ **Simplified Configuration** - Minimal environment variables
-- ✅ **Better Error Handling** - Robust connection and search handling
-
-### Developer Experience
-- **Before**: Multi-step setup, user creation, manual indexing, complex authentication
-- **After**: Single command, automatic indexing, instant search, zero authentication
-
-## 🚀 Deployment
-
-### Production Setup
-1. **Update environment**: Set `FLASK_ENV=production` in `.env`
-2. **Resource limits**: Configure memory/CPU limits in docker-compose.yml
-3. **Persistent storage**: Ensure `es_data` volume is properly backed up
-4. **Reverse proxy**: Use nginx/Apache for SSL termination and domain routing
-5. **Monitoring**: Set up log aggregation and health monitoring
-
-### Production Commands
-```bash
-# Production startup
-FLASK_ENV=production docker-compose up -d --build
-
-# Monitor in production
-docker-compose logs -f --tail=100
-
-# Backup data volume
-docker run --rm -v fae-knowledge-base_es_data:/data -v $(pwd):/backup ubuntu tar czf /backup/es-backup.tar.gz /data
+### **🎯 Test Results**
+```
+================================ test session starts ==============================
+tests/test_api.py::TestHealthEndpoint::test_health_check PASSED          [  4%]
+tests/test_api.py::TestStatsEndpoint::test_stats_endpoint PASSED         [ 12%] 
+tests/test_api.py::TestSearchEndpoint::test_search_endpoint_success PASSED [ 20%]
+tests/test_api.py::TestDocumentEndpoint::test_get_document_success PASSED [ 48%]
+tests/test_api.py::TestAPIIntegration::test_full_search_workflow PASSED  [ 96%]
+tests/test_api.py::TestAPIIntegration::test_api_consistency PASSED       [100%]
+========================== 25 passed in 0.61s ===============================
 ```
 
-## 🤝 Contributing
+---
 
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Test your changes: `docker-compose up -d --build`
-4. Commit changes: `git commit -m 'Add amazing feature'`
-5. Push to branch: `git push origin feature/amazing-feature`
-6. Open a Pull Request
+## 🚀 **CI/CD Pipeline**
 
-## 🔍 API Reference
+### **🔄 Automated Workflows**
+```yaml
+# Triggered on: push to main, pull requests
+Code Quality → Unit Tests → Build Images → Integration Tests → Security Scan → E2E Tests → Deploy
+```
 
-### Search API
+### **🔒 Security & Quality**
+- **🛡️ Trivy vulnerability scanning** - Container security
+- **🧪 25+ automated tests** - Comprehensive coverage  
+- **📊 Code coverage reporting** - Quality metrics
+- **🔍 Dependency scanning** - Supply chain security
+
+### **📊 Pipeline Status**
+Each push triggers:
+1. **✅ Code Quality Checks** (9s)
+2. **✅ Unit Tests** (16s)  
+3. **✅ Build Docker Images** (26s)
+4. **✅ Integration Tests** (1m 21s)
+5. **✅ Security Scanning** (0s - parallel)
+6. **✅ End-to-End Tests** (0s - main branch only)
+7. **🚀 Production Deployment** (main branch only)
+
+---
+
+## ⚙️ **Configuration**
+
+### **🌍 Environment Variables**
 ```bash
-# Search documents
+# Core Configuration
+ES_HOST=http://elasticsearch:9200           # Elasticsearch connection
+INDEX_NAME=knowledge_base                   # Search index name  
+DOCUMENTS_DIR=/app/documents               # Document directory
+FLASK_ENV=production                       # Environment mode
+
+# Service Configuration
+API_BASE_URL=http://backend:5000          # Backend API endpoint
+PORT=5000                                 # Backend server port
+
+# Testing Configuration  
+TEST_ENV=docker                           # Test environment
+WITH_COVERAGE=true                        # Enable coverage reporting
+```
+
+### **🐳 Docker Compose Environments**
+
+#### **Production (`docker-compose.yml`)**
+```bash
+docker compose up --build
+# ✅ Optimized for production
+# ✅ Automatic health checks
+# ✅ Service dependencies
+# ✅ Volume persistence
+```
+
+#### **Development (`docker-compose.dev.yml`)**
+```bash
+docker compose -f docker-compose.dev.yml up
+# ✅ Development settings
+# ✅ Hot reloading
+# ✅ Debug logging
+# ✅ Development ports
+```
+
+#### **Testing (`docker-compose.test.yml`)**
+```bash
+docker compose -f docker-compose.test.yml up test-runner
+# ✅ Isolated test environment
+# ✅ Test data seeding  
+# ✅ Coverage reporting
+# ✅ Artifact collection
+```
+
+---
+
+## 🛠️ **Development**
+
+### **🏃‍♂️ Local Development**
+```bash
+# Option 1: Full Docker development
+docker compose -f docker-compose.dev.yml up --build
+
+# Option 2: Hybrid development (Elasticsearch in Docker, app local)
+docker run -d -p 9200:9200 \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.enabled=false" \
+  elasticsearch:9.0.0
+
+pip install -r requirements-dev.txt
+python ingest.py && python app.py
+```
+
+### **🔧 Development Workflow**
+```bash
+# 1. Add new documents
+cp new-docs/*.md documents/
+
+# 2. Test ingestion
+docker compose up ingest
+
+# 3. Run tests
+scripts/quick-test.sh
+
+# 4. Test full pipeline  
+docker compose -f docker-compose.test.yml up test-runner
+
+# 5. Commit and push (triggers full CI/CD)
+git add . && git commit -m "Add new documentation"
+git push origin feature/new-docs
+```
+
+### **🧪 Testing Your Changes**
+```bash
+# Quick validation
+scripts/quick-test.sh
+
+# Full test suite
+scripts/test-new.sh  
+
+# Test specific scenarios
+docker compose -f docker-compose.test.yml up test-runner
+
+# Check test coverage
+docker compose -f docker-compose.test.yml up test-runner
+# Look for coverage.xml in artifacts
+```
+
+---
+
+## 🌐 **API Reference**
+
+### **🔍 Search API**
+```bash
 POST /search
 Content-Type: application/json
 {
-  "query": "search terms"
+  "query": "microservices architecture",
+  "size": 10,
+  "from": 0
 }
 
 # Response
@@ -311,30 +382,251 @@ Content-Type: application/json
   "total": 5,
   "results": [
     {
-      "filename": "document.md",
+      "filename": "architecture.md",
       "content": "...",
-      "highlight": "highlighted content...",
-      "score": 1.234
+      "highlight": "highlighted <em>microservices</em> content...", 
+      "score": 1.234,
+      "metadata": {
+        "last_modified": "2024-01-15T10:30:00Z",
+        "size": 2048
+      }
     }
   ]
 }
 ```
 
-### Health & Stats
+### **📊 Health & Statistics**
 ```bash
-# Health check
+# Health check (includes all services)
 GET /health
-# Returns: {"status": "healthy", "elasticsearch": "connected"}
+{
+  "status": "healthy",
+  "services": {
+    "elasticsearch": "connected",
+    "backend": "running", 
+    "ingest": "completed"
+  },
+  "timestamp": "2024-01-15T10:30:00Z"
+}
 
-# Document statistics  
-GET /stats
-# Returns: {"count": 42}
+# Document statistics
+GET /stats  
+{
+  "count": 42,
+  "index_name": "knowledge_base",
+  "last_updated": "2024-01-15T09:15:00Z",
+  "index_size": "1.2MB"
+}
+
+# Service information
+GET /
+{
+  "service": "FAE Knowledge Base API",
+  "version": "2.0.0",
+  "architecture": "microservices",
+  "endpoints": ["/search", "/health", "/stats", "/document/<filename>"]
+}
 ```
 
-## 📄 License
+### **📄 Document API**
+```bash
+# Get specific document
+GET /document/architecture.md
+{
+  "filename": "architecture.md",
+  "content": "# Microservices Architecture\n\n...",
+  "metadata": {
+    "size": 2048,
+    "last_modified": "2024-01-15T10:30:00Z"
+  }
+}
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+# Document not found
+GET /document/nonexistent.md
+{
+  "error": "Document not found"
+}
+```
 
 ---
 
-**🎯 Ready to get started?** Run `docker-compose up -d --build` and visit http://localhost:5000!
+## 🔧 **Operations & Monitoring**
+
+### **📊 Health Monitoring**
+```bash
+# Check all services
+docker compose ps
+
+# Service-specific health
+curl http://localhost:5000/health      # Backend health
+curl http://localhost:9200            # Elasticsearch health  
+
+# View logs
+docker compose logs backend           # Backend logs
+docker compose logs ingest            # Ingestion logs
+```
+
+### **🔄 Operational Commands**
+```bash
+# Production startup
+docker compose up -d --build
+
+# Update documents only
+docker compose up ingest
+
+# Restart backend only  
+docker compose restart backend
+
+# View real-time logs
+docker compose logs -f backend
+
+# Check service dependencies
+docker compose config
+```
+
+### **📋 Troubleshooting**
+```bash
+# Clean restart (removes all data)
+docker compose down -v && docker compose up --build
+
+# Debug ingestion issues
+docker compose up ingest
+docker compose logs ingest
+
+# Debug backend issues  
+docker compose logs backend
+curl http://localhost:5000/health
+
+# Test service communication
+docker compose exec backend curl http://elasticsearch:9200
+docker compose exec backend python -c "import requests; print(requests.get('http://elasticsearch:9200').json())"
+```
+
+---
+
+## 🚀 **Production Deployment**
+
+### **🌍 Production Setup**
+```bash
+# 1. Clone repository
+git clone https://github.com/Cwilliams333/FAE-Knowledge-Base.git
+cd FAE-Knowledge-Base
+
+# 2. Configure production environment
+cp .env.example .env
+# Edit .env with production settings
+
+# 3. Deploy with production compose
+FLASK_ENV=production docker compose up -d --build
+
+# 4. Verify deployment
+curl http://your-domain.com/health
+```
+
+### **🔒 Production Considerations**
+- **🛡️ Security**: Use reverse proxy (nginx/Apache) for SSL termination
+- **📊 Monitoring**: Set up log aggregation and metrics collection
+- **💾 Backup**: Regular backups of Elasticsearch data volume
+- **📈 Scaling**: Consider Elasticsearch cluster for high availability  
+- **🔄 Updates**: Use blue-green deployment for zero-downtime updates
+
+### **📦 Production Environment**
+```yaml
+# Production docker-compose.override.yml
+version: '3.8'
+services:
+  elasticsearch:
+    environment:
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"  # Production memory
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          
+  backend:
+    environment:
+      - FLASK_ENV=production
+    deploy:
+      replicas: 2  # Load balancing
+      resources:
+        limits:
+          memory: 512m
+```
+
+---
+
+## 🤝 **Contributing**
+
+### **🚀 Getting Started**
+```bash
+# 1. Fork and clone
+git clone https://github.com/yourusername/FAE-Knowledge-Base.git
+cd FAE-Knowledge-Base
+
+# 2. Create feature branch
+git checkout -b feature/amazing-feature
+
+# 3. Set up development environment
+docker compose -f docker-compose.dev.yml up --build
+
+# 4. Make your changes and test
+scripts/test-new.sh
+
+# 5. Submit pull request
+git push origin feature/amazing-feature
+```
+
+### **🧪 Testing Requirements**
+- ✅ All existing tests must pass
+- ✅ New features must include tests
+- ✅ Integration tests must pass
+- ✅ Security scans must pass
+
+### **📋 Development Standards**
+- **🐍 Python**: Follow PEP 8 style guidelines
+- **🐳 Docker**: Use multi-stage builds for optimization
+- **🧪 Testing**: Minimum 80% test coverage for new code
+- **📝 Documentation**: Update README for any new features
+
+---
+
+## 📄 **License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🎉 **What Makes This Special**
+
+### **🔄 Independent Ingestion**
+Unlike traditional monolithic setups, you can update your knowledge base **without any downtime**:
+```bash
+cp new-docs/*.md documents/
+docker compose up ingest  # Backend stays running!
+```
+
+### **🛡️ Production-Ready**
+Enterprise-grade features out of the box:
+- **✅ 25+ automated tests** with full CI/CD
+- **✅ Security vulnerability scanning**  
+- **✅ Health monitoring and metrics**
+- **✅ Zero-downtime document updates**
+
+### **🧪 Developer-Friendly**
+Built for teams who ship fast:
+- **✅ One-command setup** for any environment
+- **✅ Independent service testing**
+- **✅ Hot reloading in development**
+- **✅ Comprehensive error handling**
+
+---
+
+**🎯 Ready to revolutionize your team's knowledge sharing?**
+
+```bash
+git clone https://github.com/Cwilliams333/FAE-Knowledge-Base.git
+cd FAE-Knowledge-Base
+docker compose up --build
+```
+
+**Visit http://localhost:5000 and start searching!** 🚀
