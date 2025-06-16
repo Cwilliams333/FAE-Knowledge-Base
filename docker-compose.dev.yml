@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # Override Flask environment for development
+  web:
+    environment:
+      - FLASK_ENV=development
+
+  # React frontend development server
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: kb-frontend-dev
+    ports:
+      - "5174:5173"  # Different host port to avoid conflict
+    volumes:
+      # Mount source code for hot reloading
+      - ./frontend:/app
+      # Prevent local node_modules from overriding container's
+      - /app/node_modules
+    networks:
+      - knowledge-net
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://web:5000

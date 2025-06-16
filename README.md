@@ -1,136 +1,340 @@
 # FAE Knowledge Base 🔍
 
-A simple, searchable knowledge base for engineering teams using Elasticsearch and Flask.
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.0.0-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+[![React](https://img.shields.io/badge/React-19.1.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-6.3.5-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-4.1.8-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.9.0-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)](https://elastic.co)
 
-![MockUpSearch](https://github.com/user-attachments/assets/eabb573d-3491-4a1d-809b-91a2aec61091)
+A modern, searchable knowledge base for engineering teams with **premium React frontend** and **one-command Docker setup**.
 
+![Knowledge Base Interface](2FAEfrontend.gif)
 
-## Features
+## ✨ Features
 
-- 📄 **Markdown Support** - Rendering of markdown documents
-- 🔍 **Full-Text Search** - Search across all ingested documentation
-- 🐳 **Docker Ready** - Easy deployment with Docker Compose
-- 📁 **Auto-Indexing** - Automatically indexes new documents
-- 🎨 **Clean UI** - Simple search interface
+- 📄 **Markdown Support** - Full rendering of markdown documents with syntax highlighting
+- 🔍 **Full-Text Search** - Powerful search across all documentation with highlighting
+- 🚀 **One-Command Setup** - Auto-indexing and startup with single Docker command
+- 📁 **Auto-Indexing** - Automatically indexes documents on container startup
+- 🎨 **Clean UI** - Modern, responsive search interface
+- 🐳 **Docker Ready** - Complete containerized deployment
+- 🔓 **No Authentication** - Simple, frictionless setup for internal teams
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Clone the repository
+### 1. Clone and Setup
 ```bash
 git clone https://github.com/Cwilliams333/FAE-knowledge-base.git
 cd FAE-knowledge-base
 ```
 
-### 2. Set up environment
+### 2. Add Your Documents
 ```bash
-cp .env.example .env
-# Edit .env with your settings
-```
-
-### 3. Add your documents
-Place your markdown files in the `documents/` folder:
-```bash
-mkdir documents
+# Place your markdown files in the documents folder
+mkdir -p documents
 cp your-docs/*.md documents/
 ```
 
-### 4. Start with Docker Compose
+### 3. One Command to Start Everything
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
-### 5. Access the UI
-Open http://localhost:5000 in your browser
+**That's it!** 🎉
 
-## Project Structure
+- ⏳ Elasticsearch will start
+- 📄 All documents will be auto-indexed  
+- 🌐 Web interface will be available at http://localhost:5000
+
+## 📁 Project Structure
 ```
 FAE-knowledge-base/
-├── docker-compose.yml      # Docker orchestration
-├── Dockerfile             # Web app container
-├── app.py                # Flask web application
-├── ingest.py             # Document indexer
-├── requirements.txt      # Python dependencies
-├── .env.example         # Environment template
-├── documents/           # Your markdown files go here
-└── README.md           # This file
+├── docker-compose.yml      # Container orchestration
+├── Dockerfile             # Web app container config
+├── startup.sh             # Auto-ingest + web startup script
+├── app.py                 # Flask web application
+├── ingest.py              # Document indexer
+├── requirements.txt       # Python dependencies
+├── .env                   # Environment configuration
+├── documents/             # Your markdown files go here
+└── README.md              # This file
 ```
 
-## Configuration
+## 📖 Usage
 
-### Environment Variables
-- `ELASTIC_PASSWORD` - Password for Elasticsearch
-- `ES_HOST` - Elasticsearch host (default: https://elasticsearch:9200)
-- `INDEX_NAME` - Name of the Elasticsearch index
-- `DOCUMENTS_DIR` - Directory containing documents
-- `WATCH_MODE` - Enable auto-reindexing (true/false)
+### Adding New Documents
 
-## Usage
+After the initial setup, you can add new documents using either method:
 
-### Adding Documents
-1. Drop markdown files into the `documents/` folder
-2. Files are automatically indexed within 30 seconds
-3. Search for them immediately
+#### Method 1: Manual Indexing (Recommended) ⚡
+```bash
+# Add files to documents folder
+cp new-file.md documents/
+
+# Index new documents immediately
+docker exec kb-web python ingest.py
+```
+✅ **Fast & reliable** - New documents appear in search immediately
+
+#### Method 2: Full Rebuild (Complete Auto-Indexing Test) 🔄
+```bash
+# Add files to documents folder  
+cp new-file.md documents/
+
+# Rebuild containers to trigger auto-indexing
+docker-compose down && docker-compose up -d --build
+```
+✅ **Tests full auto-indexing** - Takes 60 seconds but validates entire system
+
+#### ⚠️ Why `docker-compose restart web` doesn't work
+- **Restart** = stops and starts existing container
+- **Auto-indexing only runs on container creation**, not restart
+- Use **Method 1** (manual) for daily use or **Method 2** (rebuild) for testing
 
 ### Searching
 - Type keywords in the search box
-- Click on results to view formatted documents
+- Click results to view formatted documents  
 - Use "View Raw" to see original markdown
+- Search supports fuzzy matching and highlighting
 
 ### Supported File Types
-- `.md` - Markdown files
+- `.md` - Markdown files (primary)
 - `.txt` - Plain text files
-- `.csv` - CSV files (coming soon)
-- `.json` - JSON files (coming soon)
+- `.csv` - CSV files 
+- `.json` - JSON files
 
-## Development
+## ⚙️ Configuration
 
-### Run locally without Docker
+### Environment Variables (.env)
+```bash
+# Elasticsearch Configuration (no auth needed)
+ES_HOST=http://elasticsearch:9200
+ES_USER=
+ES_PASSWORD=
+
+# Application Configuration  
+INDEX_NAME=knowledge_base
+FLASK_ENV=development
+PORT=5000
+
+# Indexing Configuration
+DOCUMENTS_DIR=/app/documents
+WATCH_MODE=false
+```
+
+## 🛠️ Development
+
+### Local Development (without Docker)
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Start Elasticsearch (if not running)
-docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:8.9.0
+# Start Elasticsearch
+docker run -d -p 9200:9200 -e "discovery.type=single-node" -e "xpack.security.enabled=false" elasticsearch:8.9.0
+
+# Index documents
+python ingest.py
 
 # Run the app
 python app.py
 ```
 
-### Run indexer manually
+### Development Workflow
 ```bash
-python ingest.py
+# Add new documents
+cp new-docs/*.md documents/
+
+# Quick indexing for development
+docker exec kb-web python ingest.py
+
+# View immediately at http://localhost:5000
 ```
 
-## Deployment
+## 🏗️ Architecture
 
-### Using Docker Compose (Recommended)
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Documents/    │───▶│   Elasticsearch  │◀───│   Flask Web     │
+│   (markdown)    │    │   (search index) │    │   (UI + API)    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │                         │
+                              │                         │
+                       ┌──────▼──────┐         ┌────────▼────────┐
+                       │   Auto-     │         │   Search UI     │
+                       │   Indexing  │         │   localhost:5000│
+                       └─────────────┘         └─────────────────┘
+```
+
+## 🔧 Monitoring & Health
+
+- **Health Check**: http://localhost:5000/health
+- **Elasticsearch**: http://localhost:9200
+- **Document Stats**: http://localhost:5000/stats
+- **Logs**: `docker-compose logs -f web`
+
+## 🔄 Common Commands
+
+### Startup & Management
 ```bash
+# Initial setup - starts everything with auto-indexing
+docker-compose up -d --build
+
+# Check running status
+docker-compose ps
+
+# View real-time logs
+docker-compose logs -f web
+
+# Stop everything
+docker-compose down
+```
+
+### Document Management
+```bash
+# Add new documents (recommended method)
+cp new-file.md documents/
+docker exec kb-web python ingest.py
+
+# Check document count
+curl http://localhost:5000/stats
+
+# Test search
+curl -X POST http://localhost:5000/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"your search term"}'
+```
+
+### Troubleshooting
+```bash
+# Clean restart (removes all data)
+docker-compose down -v && docker-compose up -d --build
+
+# Force rebuild containers
+docker-compose build --no-cache
 docker-compose up -d
+
+# Check Elasticsearch directly
+curl http://localhost:9200
+curl http://localhost:9200/knowledge_base/_stats
 ```
 
-### Manual deployment
-1. Set up Elasticsearch cluster
-2. Configure environment variables
-3. Run app with gunicorn:
-   ```bash
-   gunicorn -w 4 -b 0.0.0.0:5000 app:app
-   ```
+## 🐛 Troubleshooting
 
-## Monitoring
+### Documents Not Appearing
+1. **Check documents folder**: Ensure `.md` files are in `documents/` directory
+2. **Manual re-index**: Run `docker exec kb-web python ingest.py`
+3. **Check logs**: `docker-compose logs web | grep -i "index\|document"`
+4. **Verify stats**: Visit http://localhost:5000/stats
 
-- Health check: http://localhost:5000/health
-- Elasticsearch: http://localhost:9200
-- Logs: `docker-compose logs -f`
+### Search Not Working
+1. **Test Elasticsearch**: `curl http://localhost:9200` (should return cluster info)
+2. **Check index**: `curl http://localhost:9200/knowledge_base/_stats`
+3. **Restart services**: `docker-compose restart`
+4. **Check browser console**: Look for JavaScript errors
 
-## Troubleshooting
+### Web Interface Not Loading
+1. **Port conflict**: Ensure port 5000 is available (`netstat -an | grep 5000`)
+2. **Container status**: `docker-compose ps` (web should show "Up")
+3. **Container logs**: `docker-compose logs web`
+4. **Health check**: `curl http://localhost:5000/health`
 
-### Documents not appearing
-- Check `documents/` folder permissions
-- View indexer logs: `docker-compose logs web`
-- Verify Elasticsearch is running: `docker-compose ps`
+### Auto-Indexing Not Working
+1. **Check startup.sh**: `docker exec kb-web cat startup.sh`
+2. **Container startup logs**: `docker logs kb-web | head -20`
+3. **Manual test**: `docker exec kb-web bash startup.sh`
+4. **Use manual indexing**: `docker exec kb-web python ingest.py`
 
-### Search not working
-- Ensure Elasticsearch is healthy
-- Check index exists: `curl -k https://elastic:password@localhost:9200/_cat/indices`
-- Rebuild index: `docker-compose restart web`
+## 📝 What Changed from Original
 
+### Removed Complexity
+- ❌ **No Kibana** - Custom Flask UI only
+- ❌ **No Authentication** - No passwords or user management  
+- ❌ **No Manual Multi-Step Setup** - Everything automated
+
+### Added Simplicity  
+- ✅ **One Command Setup** - `docker-compose up -d --build`
+- ✅ **Auto-Indexing on Startup** - Documents indexed automatically on container creation
+- ✅ **Manual Indexing Option** - `docker exec kb-web python ingest.py` for quick updates
+- ✅ **Simplified Configuration** - Minimal environment variables
+- ✅ **Better Error Handling** - Robust connection and search handling
+
+### Developer Experience
+- **Before**: Multi-step setup, user creation, manual indexing, complex authentication
+- **After**: Single command, automatic indexing, instant search, zero authentication
+
+## 🚀 Deployment
+
+### Production Setup
+1. **Update environment**: Set `FLASK_ENV=production` in `.env`
+2. **Resource limits**: Configure memory/CPU limits in docker-compose.yml
+3. **Persistent storage**: Ensure `es_data` volume is properly backed up
+4. **Reverse proxy**: Use nginx/Apache for SSL termination and domain routing
+5. **Monitoring**: Set up log aggregation and health monitoring
+
+### Production Commands
+```bash
+# Production startup
+FLASK_ENV=production docker-compose up -d --build
+
+# Monitor in production
+docker-compose logs -f --tail=100
+
+# Backup data volume
+docker run --rm -v fae-knowledge-base_es_data:/data -v $(pwd):/backup ubuntu tar czf /backup/es-backup.tar.gz /data
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Test your changes: `docker-compose up -d --build`
+4. Commit changes: `git commit -m 'Add amazing feature'`
+5. Push to branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
+
+## 🔍 API Reference
+
+### Search API
+```bash
+# Search documents
+POST /search
+Content-Type: application/json
+{
+  "query": "search terms"
+}
+
+# Response
+{
+  "total": 5,
+  "results": [
+    {
+      "filename": "document.md",
+      "content": "...",
+      "highlight": "highlighted content...",
+      "score": 1.234
+    }
+  ]
+}
+```
+
+### Health & Stats
+```bash
+# Health check
+GET /health
+# Returns: {"status": "healthy", "elasticsearch": "connected"}
+
+# Document statistics  
+GET /stats
+# Returns: {"count": 42}
+```
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+**🎯 Ready to get started?** Run `docker-compose up -d --build` and visit http://localhost:5000!
