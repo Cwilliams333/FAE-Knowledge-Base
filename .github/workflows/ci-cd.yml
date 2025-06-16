@@ -192,44 +192,23 @@ jobs:
           sleep 5;
         done'
         
-        # Now start ingest service
-        docker compose -f docker-compose.test.yml up -d ingest
+        # Start ingest service and wait for it to complete
+        echo "Starting ingest service..."
+        docker compose -f docker-compose.test.yml up ingest
         
-        # Wait for ingest to complete
-        echo "Waiting for ingest service to complete..."
-        INGEST_COMPLETE=false
-        for i in {1..20}; do
-          # Check if ingest has exited
-          INGEST_STATUS=$(docker compose -f docker-compose.test.yml ps --format json ingest | jq -r '.[0].State' || echo "unknown")
-          echo "Ingest status: $INGEST_STATUS"
-          
-          if [ "$INGEST_STATUS" = "exited" ]; then
-            # Get the exit code
-            INGEST_EXIT_CODE=$(docker compose -f docker-compose.test.yml ps --format json ingest | jq -r '.[0].ExitCode' || echo "1")
-            echo "Ingest exited with code: $INGEST_EXIT_CODE"
-            
-            if [ "$INGEST_EXIT_CODE" = "0" ]; then
-              echo "✓ Ingest completed successfully"
-              INGEST_COMPLETE=true
-              break
-            else
-              echo "✗ Ingest failed with exit code $INGEST_EXIT_CODE"
-              docker compose -f docker-compose.test.yml logs ingest
-              exit 1
-            fi
-          fi
-          
-          echo "Waiting for ingest to complete... ($i/20)"
-          sleep 3
-        done
+        # Check ingest exit code
+        INGEST_EXIT_CODE=$(docker wait ingest-test 2>/dev/null || echo "1")
+        echo "Ingest completed with exit code: $INGEST_EXIT_CODE"
         
-        if [ "$INGEST_COMPLETE" = "false" ]; then
-          echo "✗ Ingest did not complete within timeout"
+        if [ "$INGEST_EXIT_CODE" != "0" ]; then
+          echo "✗ Ingest failed with exit code $INGEST_EXIT_CODE"
           docker compose -f docker-compose.test.yml logs ingest
           exit 1
         fi
         
-        # Start backend service
+        echo "✓ Ingest completed successfully"
+        
+        # Start backend service (will wait for ingest to complete due to depends_on)
         docker compose -f docker-compose.test.yml up -d backend
         
         # Wait for backend to be ready
