@@ -150,6 +150,10 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: [build]
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     
     # Removed services section as we're using docker-compose.test.yml instead
           
@@ -270,13 +274,37 @@ jobs:
         
     - name: Publish test results
       uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
+      if: always() && github.event_name == 'pull_request'
       with:
         files: |
           test-results.xml
+          test-artifacts/test-results.xml
           **/test-results.xml
         check_name: Integration Test Results
         fail_on: nothing
+      continue-on-error: true
+        
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f test-results.xml ]; then
+          echo "✅ Test results file generated" >> $GITHUB_STEP_SUMMARY
+          # Try to extract basic info from junit xml
+          if command -v xmllint &> /dev/null; then
+            TESTS=$(xmllint --xpath "string(//testsuite/@tests)" test-results.xml 2>/dev/null || echo "?")
+            FAILURES=$(xmllint --xpath "string(//testsuite/@failures)" test-results.xml 2>/dev/null || echo "?")
+            ERRORS=$(xmllint --xpath "string(//testsuite/@errors)" test-results.xml 2>/dev/null || echo "?")
+            echo "- Total tests: $TESTS" >> $GITHUB_STEP_SUMMARY
+            echo "- Failures: $FAILURES" >> $GITHUB_STEP_SUMMARY
+            echo "- Errors: $ERRORS" >> $GITHUB_STEP_SUMMARY
+          fi
+        else
+          echo "❌ No test results file found" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Exit code: ${TEST_EXIT_CODE:-unknown}" >> $GITHUB_STEP_SUMMARY
         
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4
