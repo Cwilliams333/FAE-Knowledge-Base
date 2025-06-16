@@ -80,13 +80,18 @@ jobs:
         echo "Waiting for Flask API to be ready..."
         timeout 60s bash -c 'until curl -f http://localhost:5000/health; do sleep 5; done'
         
+    - name: Wait for ingest service to complete
+      run: |
+        echo "Waiting for ingest service to complete indexing..."
+        timeout 120s bash -c 'until docker compose logs ingest 2>&1 | grep -q "Indexing completed successfully"; do sleep 5; done' || true
+        
     - name: Install backend test dependencies
       run: |
-        docker compose exec -T web pip install -r requirements-dev.txt
+        docker compose exec -T backend pip install -r requirements-dev.txt
         
     - name: Run backend tests
       run: |
-        timeout 300s docker compose exec -T -e API_BASE_URL=http://localhost:5000 -e FLASK_ENV=testing web python -m pytest tests/ -v --tb=short --timeout=120
+        timeout 300s docker compose exec -T -e API_BASE_URL=http://localhost:5000 -e FLASK_ENV=testing backend python -m pytest tests/ -v --tb=short --timeout=120
         
     - name: Install frontend test dependencies (if not already installed)
       run: |
@@ -142,6 +147,16 @@ jobs:
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
           
+    - name: Extract metadata for ingest image
+      id: meta-ingest
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-ingest
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+          
     - name: Extract metadata for frontend image
       id: meta-frontend
       uses: docker/metadata-action@v5
@@ -156,10 +171,21 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile
+        file: ./Dockerfile.backend
         push: true
         tags: ${{ steps.meta-backend.outputs.tags }}
         labels: ${{ steps.meta-backend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Build and push ingest image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.ingest
+        push: true
+        tags: ${{ steps.meta-ingest.outputs.tags }}
+        labels: ${{ steps.meta-ingest.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
@@ -177,4 +203,5 @@ jobs:
     - name: Output image digests
       run: |
         echo "Backend image: ${{ steps.meta-backend.outputs.tags }}"
+        echo "Ingest image: ${{ steps.meta-ingest.outputs.tags }}"
         echo "Frontend image: ${{ steps.meta-frontend.outputs.tags }}"

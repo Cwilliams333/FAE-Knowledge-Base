@@ -14,10 +14,6 @@ RUN pip install --no-cache-dir -r requirements-dev.txt
 # Copy application files
 COPY app.py .
 COPY ingest.py .
-COPY startup.sh .
-
-# Make startup script executable
-RUN chmod +x startup.sh
 
 # Create documents directory
 RUN mkdir -p /app/documents

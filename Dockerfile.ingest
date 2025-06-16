@@ -1,0 +1,36 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy ingest scripts
+COPY ingest.py .
+COPY ingest_wrapper.py .
+
+# Make wrapper script executable
+RUN chmod +x ingest_wrapper.py
+
+# Create necessary directories
+RUN mkdir -p /app/documents /app/status
+
+# Default command to run ingest through wrapper
+CMD ["python", "ingest_wrapper.py"]
+
+# Health check that verifies ingest completion
+# The health check looks for a marker file that indicates successful indexing
+# The marker must be recent (within 5 minutes) to be considered healthy
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD python -c "import os, sys, time; \
+marker_file = '/app/status/ingest_complete'; \
+if not os.path.exists(marker_file): \
+    print('Health check failed: No marker file found'); \
+    sys.exit(1); \
+age = time.time() - os.path.getmtime(marker_file); \
+if age > 300: \
+    print(f'Health check failed: Marker file too old ({age:.0f}s)'); \
+    sys.exit(1); \
+print('Health check passed'); \
+sys.exit(0)" || exit 1
