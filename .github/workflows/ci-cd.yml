@@ -29,14 +29,14 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('config/requirements*.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
           
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
+        pip install -r config/requirements-dev.txt
         
     - name: Run linting
       run: |
@@ -64,18 +64,18 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('config/requirements*.txt') }}
         
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -r requirements-dev.txt
+        pip install -r config/requirements.txt
+        pip install -r config/requirements-dev.txt
         
     - name: Run unit tests
       run: |
         # Run unit tests with mocks (no containers needed)
-        python -m pytest tests/unit/ -v --tb=short --cov=app --cov-report=xml || echo "Unit tests not yet implemented"
+        python -m pytest testing/tests/unit/ -v --tb=short --cov=app --cov-report=xml || echo "Unit tests not yet implemented"
         
     - name: Upload unit test coverage
       uses: codecov/codecov-action@v3
@@ -114,7 +114,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile.backend
+        file: ./docker/Dockerfile.backend
         push: false
         tags: backend:test
         cache-from: type=local,src=/tmp/.buildx-cache
@@ -124,7 +124,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile.ingest
+        file: ./docker/Dockerfile.ingest
         push: false
         tags: ingest:test
         cache-from: type=local,src=/tmp/.buildx-cache
@@ -134,7 +134,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile.test
+        file: ./docker/Dockerfile.test
         push: false
         tags: test-runner:test
         cache-from: type=local,src=/tmp/.buildx-cache
