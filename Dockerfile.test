@@ -1,0 +1,31 @@
+# Test runner container for microservices architecture
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    netcat-traditional \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-dev.txt
+
+# Copy test files and application code
+COPY tests/ ./tests/
+COPY app.py .
+COPY pytest.ini .
+
+# Create test script for service orchestration
+COPY test_runner.py .
+
+# Default command to run tests
+CMD ["python", "test_runner.py"]
+
+# Health check to verify test environment is ready
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+  CMD python -c "import requests; requests.get('http://backend:5000/health')" || exit 1

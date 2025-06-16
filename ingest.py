@@ -19,7 +19,7 @@ DOCUMENTS_DIR = None
 
 def connect_elasticsearch():
     """Connect to Elasticsearch with retry logic"""
-    for i in range(30):
+    for i in range(60):  # Increased timeout for testing environments
         try:
             # Check if we need authentication
             if ES_USER and ES_PASSWORD:
@@ -41,7 +41,7 @@ def connect_elasticsearch():
                 print("✓ Connected to Elasticsearch")
                 return es
         except Exception as e:
-            print(f"Waiting for Elasticsearch... ({i+1}/30): {str(e)[:50]}")
+            print(f"Waiting for Elasticsearch... ({i+1}/60): {str(e)[:50]}")
             time.sleep(2)
     raise Exception("Failed to connect to Elasticsearch")
 

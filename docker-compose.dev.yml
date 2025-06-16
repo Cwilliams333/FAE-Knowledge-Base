@@ -2,9 +2,10 @@ version: '3.8'
 
 services:
   # Override Flask environment for development
-  web:
+  backend:
     environment:
       - FLASK_ENV=development
+      - FLASK_DEBUG=true
 
   # React frontend development server
   frontend-dev:
@@ -22,5 +23,7 @@ services:
     networks:
       - knowledge-net
     restart: unless-stopped
+    depends_on:
+      - backend
     environment:
-      - VITE_API_URL=http://web:5000
+      - VITE_API_URL=http://backend:5000

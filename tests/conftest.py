@@ -3,6 +3,12 @@ Test configuration and fixtures for FAE Knowledge Base API tests.
 
 This module provides centralized fixtures for testing the Flask API,
 following modern pytest best practices with proper isolation and cleanup.
+
+Architecture Note: Tests work with the microservices architecture where:
+- elasticsearch: Provides the search backend
+- ingest: Indexes test documents from test_documents/ directory  
+- backend: Runs the Flask API server
+- Tests wait for ingest completion before running via service dependencies
 """
 
 import pytest
@@ -12,9 +18,10 @@ import time
 import os
 
 
-# Test Configuration - Use localhost in CI, WSL gateway locally
-TEST_API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
+# Test Configuration - Use WSL gateway IP for local testing
+TEST_API_BASE_URL = os.getenv("API_BASE_URL", "http://172.20.32.1:5000")
 TEST_TIMEOUT = 30  # seconds
+TEST_INDEX = "knowledge_base_test"  # Test-specific index name
 
 
 @pytest.fixture(scope="session")
@@ -58,8 +65,9 @@ def wait_for_api(api_client):
     
     This fixture attempts to connect to the health endpoint and waits
     for a successful response before allowing tests to proceed.
+    Works with the microservices architecture where backend depends on ingest completion.
     """
-    max_retries = 10
+    max_retries = 15  # Increased for microservices startup time
     retry_delay = 2
     
     for attempt in range(max_retries):
@@ -71,7 +79,8 @@ def wait_for_api(api_client):
             if attempt < max_retries - 1:
                 time.sleep(retry_delay)
             else:
-                pytest.fail(f"API not ready after {max_retries} attempts")
+                pytest.fail(f"Backend API not ready after {max_retries} attempts. "
+                          f"Check that elasticsearch, ingest, and backend services are running.")
     
     return True
 
@@ -167,53 +176,52 @@ def sample_document_response():
 @pytest.fixture(scope="session", autouse=True) 
 def seed_elasticsearch():
     """
-    Seed Elasticsearch with test documents before running tests.
+    Wait for the ingest service to complete and backend to be ready.
     
-    This fixture runs once per test session to populate the test index
-    with documents from test_documents/ directory.
+    In the new microservices architecture, the ingest service handles
+    document indexing automatically before the backend starts.
+    This fixture ensures both services are ready for testing.
     """
-    import subprocess
     import time
     from elasticsearch import Elasticsearch
     
-    # Wait for Elasticsearch to be ready
-    es_url = "http://localhost:5000"  # This will work in CI/CD
-    test_index = "knowledge_base_test"
+    # Wait for backend API to be ready (it depends on ingest completion)
+    max_retries = 60  # Increased timeout for microservices startup
+    retry_delay = 2
     
-    # Wait for ES to be available through the Flask app
-    max_retries = 30
+    print("Waiting for backend API to be ready...")
+    
     for i in range(max_retries):
         try:
-            response = requests.get(f"http://localhost:5000/health", timeout=5)
+            response = requests.get(f"{TEST_API_BASE_URL}/health", timeout=5)
             if response.status_code in [200, 503]:
+                print(f"✓ Backend API is ready (attempt {i + 1})")
                 break
-        except:
+        except requests.RequestException as e:
             if i < max_retries - 1:
-                time.sleep(2)
+                print(f"Attempt {i + 1}/{max_retries}: Backend not ready yet ({e})")
+                time.sleep(retry_delay)
             else:
-                pytest.fail("Elasticsearch not ready for seeding")
+                pytest.fail(f"Backend API not ready after {max_retries} attempts")
     
-    # Run ingest.py to seed test documents
+    # Verify test documents were indexed by checking document count
     try:
-        subprocess.check_call([
-            "python", "/app/ingest.py",
-            "--path", "/app/test_documents",
-            "--index", test_index,
-            "--es-host", "http://elasticsearch:9200"
-        ])
-        print(f"✓ Seeded test index '{test_index}' with test documents")
-    except subprocess.CalledProcessError as e:
-        pytest.fail(f"Failed to seed test documents: {e}")
+        stats_response = requests.get(f"{TEST_API_BASE_URL}/stats", timeout=10)
+        if stats_response.status_code == 200:
+            doc_count = stats_response.json().get("count", 0)
+            print(f"✓ Test index contains {doc_count} documents")
+            if doc_count == 0:
+                print("⚠ Warning: No documents found in test index")
+        else:
+            print(f"⚠ Warning: Could not verify document count (status: {stats_response.status_code})")
+    except Exception as e:
+        print(f"⚠ Warning: Could not verify document count: {e}")
     
     yield  # Run tests
     
-    # Cleanup: Delete test index (optional, helps keep ES clean)
-    try:
-        es = Elasticsearch("http://elasticsearch:9200")
-        es.indices.delete(index=test_index, ignore=[400, 404])
-        print(f"✓ Cleaned up test index '{test_index}'")
-    except:
-        pass  # Ignore cleanup errors
+    # Cleanup: Delete test index (handled by docker-compose down in CI/CD)
+    # In the microservices architecture, cleanup is handled by container lifecycle
+    print("✓ Test session complete")
 
 # Auto-use fixtures  
 @pytest.fixture(autouse=True)

@@ -1,8 +1,121 @@
-version: '3.8'
+# Microservices Testing Architecture
+# This compose file orchestrates the complete testing environment
 
 services:
-  # Override web service for testing
-  web:
+  # Test database - isolated instance
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: es-test
+    ports:
+      - "9201:9200"  # Use different port to avoid conflicts
     environment:
-      - FLASK_ENV=testing
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - "ES_JAVA_OPTS=-Xms256m -Xmx512m"  # Optimized for testing
+      - bootstrap.memory_lock=false
+      - xpack.ml.enabled=false
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    volumes:
+      - es_test_data:/usr/share/elasticsearch/data
+    networks:
+      - test-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=30s || exit 1"]
+      interval: 15s
+      timeout: 15s
+      retries: 30
+      start_period: 60s
+
+  # Test document ingest service
+  ingest:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingest
+    container_name: ingest-test
+    environment:
+      - ES_HOST=http://elasticsearch:9200
+      - ES_USER=
+      - ES_PASSWORD=
       - INDEX_NAME=knowledge_base_test
+      - DOCUMENTS_DIR=/app/test_documents
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./test_documents:/app/test_documents:ro
+    networks:
+      - test-net
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/status/ingest_complete"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # Test backend API service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: backend-test
+    environment:
+      - ES_HOST=http://elasticsearch:9200
+      - ES_USER=
+      - ES_PASSWORD=
+      - INDEX_NAME=knowledge_base_test
+      - FLASK_ENV=testing
+      - PORT=5000
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      ingest:
+        condition: service_completed_successfully
+    ports:
+      - "5001:5000"  # Use different port to avoid conflicts with production
+    networks:
+      - test-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # Test runner service - runs inside Docker network
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: test-runner
+    environment:
+      - TEST_ENV=docker
+      - API_BASE_URL=http://backend:5000
+      - ES_HOST=http://elasticsearch:9200
+      - INDEX_NAME=knowledge_base_test
+      - WITH_COVERAGE=${WITH_COVERAGE:-false}
+      - PYTEST_MARKERS=${PYTEST_MARKERS:-}
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      ingest:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./tests:/app/tests:ro
+      - ./test_documents:/app/test_documents:ro
+      - test_results:/app/test_results  # For test artifacts
+    networks:
+      - test-net
+    command: python test_runner.py
+
+volumes:
+  es_test_data:
+    driver: local
+  test_results:
+    driver: local
+
+networks:
+  test-net:
+    driver: bridge

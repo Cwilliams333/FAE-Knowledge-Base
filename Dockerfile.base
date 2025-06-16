@@ -1,0 +1,16 @@
+# Base image for FAE Knowledge Base Python services
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install common Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create common directories
+RUN mkdir -p /app/documents
+
+# Set Python environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1

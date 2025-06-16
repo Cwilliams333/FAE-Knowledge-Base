@@ -21,20 +21,18 @@ services:
       retries: 5
       start_period: 60s
 
-  # Combined web + auto-ingest service (Flask backend)
-  web:
-    build: .
-    container_name: kb-web
+  # Document ingestion service (runs once)
+  ingest:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingest
+    container_name: kb-ingest
     environment:
       - ES_HOST=http://elasticsearch:9200
       - ES_USER=
       - ES_PASSWORD=
       - INDEX_NAME=knowledge_base
       - DOCUMENTS_DIR=/app/documents
-      - FLASK_ENV=production
-      - PORT=5000
-    ports:
-      - "5000:5000"
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -42,8 +40,37 @@ services:
       - ./documents:/app/documents
     networks:
       - knowledge-net
+    # No restart policy - runs once and exits
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/status/ingest_complete"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+  # Flask backend API service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: kb-backend
+    environment:
+      - ES_HOST=http://elasticsearch:9200
+      - ES_USER=
+      - ES_PASSWORD=
+      - INDEX_NAME=knowledge_base
+      - FLASK_ENV=production
+      - PORT=5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      ingest:
+        condition: service_completed_successfully
+    networks:
+      - knowledge-net
     restart: unless-stopped
-    command: bash -c "python ingest.py && gunicorn --bind 0.0.0.0:5000 --workers 4 app:app"
 
   # React frontend production server
   frontend:
@@ -54,7 +81,7 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      - web
+      - backend
     networks:
       - knowledge-net
     restart: unless-stopped
