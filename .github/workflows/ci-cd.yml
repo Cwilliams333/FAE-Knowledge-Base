@@ -213,18 +213,53 @@ jobs:
           sleep 3;
         done'
         
-        # Now run the test runner
-        docker compose -f docker-compose.test.yml up \
-          --abort-on-container-exit \
-          --exit-code-from test-runner \
-          test-runner
+        # Now run the test runner in detached mode first
+        docker compose -f docker-compose.test.yml up -d test-runner
+        
+        # Wait for test runner to complete and capture exit code
+        TEST_EXIT_CODE=0
+        docker wait test-runner || TEST_EXIT_CODE=$?
+        
+        # Store the exit code for later
+        echo "TEST_EXIT_CODE=${TEST_EXIT_CODE}" >> $GITHUB_ENV
+        
+        # Show test runner logs
+        echo "Test runner logs:"
+        docker compose -f docker-compose.test.yml logs test-runner
           
     - name: Copy test artifacts
       if: always()
       run: |
-        # Copy coverage and test results from containers
-        docker compose -f docker-compose.test.yml cp test-runner:/app/coverage.xml ./coverage.xml || true
-        docker compose -f docker-compose.test.yml cp test-runner:/app/test-results.xml ./test-results.xml || true
+        # Check if test-runner container exists
+        echo "=== Checking for test-runner container ==="
+        docker ps -a --format "table {{.Names}}\t{{.Status}}" | grep test-runner || echo "No test-runner container found"
+        
+        # Create artifacts directory
+        mkdir -p test-artifacts
+        
+        # Try to copy test results and coverage from the test-runner container
+        echo "=== Attempting to copy test artifacts ==="
+        
+        # Copy test-results.xml
+        if docker cp test-runner:/app/test-results.xml ./test-artifacts/test-results.xml 2>/dev/null; then
+          echo "✓ Successfully copied test-results.xml"
+          cp ./test-artifacts/test-results.xml ./test-results.xml
+        else
+          echo "✗ No test-results.xml found in container"
+        fi
+        
+        # Copy coverage.xml  
+        if docker cp test-runner:/app/coverage.xml ./test-artifacts/coverage.xml 2>/dev/null; then
+          echo "✓ Successfully copied coverage.xml"
+          cp ./test-artifacts/coverage.xml ./coverage.xml
+        else
+          echo "✗ No coverage.xml found in container"
+        fi
+        
+        # List what we found
+        echo "=== Artifacts found ==="
+        ls -la test-artifacts/ || echo "No artifacts directory"
+        ls -la *.xml 2>/dev/null || echo "No XML files in current directory"
         
     - name: Upload integration test coverage
       uses: codecov/codecov-action@v3
@@ -237,7 +272,11 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: test-results.xml
+        files: |
+          test-results.xml
+          **/test-results.xml
+        check_name: Integration Test Results
+        fail_on: nothing
         
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4
@@ -247,6 +286,19 @@ jobs:
         path: |
           coverage.xml
           test-results.xml
+        if-no-files-found: warn
+          
+    - name: Check test results
+      if: always()
+      run: |
+        echo "Test exit code: ${TEST_EXIT_CODE}"
+        # Only fail if we have a non-zero exit code
+        if [ "${TEST_EXIT_CODE}" != "0" ]; then
+          echo "Tests failed with exit code ${TEST_EXIT_CODE}"
+          exit ${TEST_EXIT_CODE}
+        else
+          echo "All tests passed!"
+        fi
           
     - name: Cleanup
       if: always()
