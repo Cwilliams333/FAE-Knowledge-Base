@@ -39,6 +39,7 @@ logs/
 .pytest_cache/
 .coverage
 htmlcov/
+test_env/
 
 # Build
 dist/

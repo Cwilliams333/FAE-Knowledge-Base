@@ -133,7 +133,8 @@ class MicroservicesTestOrchestrator:
             '--tb=short',
             '--strict-markers',
             '--disable-warnings',
-            '--color=yes'
+            '--color=yes',
+            '--junit-xml=test-results.xml'
         ]
         
         # Add coverage if requested
@@ -141,7 +142,7 @@ class MicroservicesTestOrchestrator:
             cmd.extend([
                 '--cov=app',
                 '--cov-report=term-missing',
-                '--cov-report=xml'
+                '--cov-report=xml:coverage.xml'
             ])
         
         logger.info(f"🔧 Running command: {' '.join(cmd)}")
