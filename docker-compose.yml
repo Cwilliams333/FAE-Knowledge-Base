@@ -25,7 +25,7 @@ services:
   ingest:
     build:
       context: .
-      dockerfile: Dockerfile.ingest
+      dockerfile: docker/Dockerfile.ingest
     container_name: kb-ingest
     environment:
       - ES_HOST=http://elasticsearch:9200
@@ -37,7 +37,7 @@ services:
       elasticsearch:
         condition: service_healthy
     volumes:
-      - ./documents:/app/documents
+      - ./docs/documents:/app/documents
     networks:
       - knowledge-net
     # No restart policy - runs once and exits
@@ -52,7 +52,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: docker/Dockerfile.backend
     container_name: kb-backend
     environment:
       - ES_HOST=http://elasticsearch:9200

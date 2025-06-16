@@ -10,18 +10,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY requirements.txt .
-COPY requirements-dev.txt .
+COPY config/requirements.txt .
+COPY config/requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -r requirements-dev.txt
 
 # Copy test files and application code
-COPY tests/ ./tests/
-COPY app.py .
-COPY pytest.ini .
+COPY testing/tests/ ./tests/
+COPY app/app.py .
+COPY testing/pytest.ini .
 
 # Create test script for service orchestration
-COPY test_runner.py .
+COPY app/test_runner.py .
 
 # Default command to run tests
 CMD ["python", "test_runner.py"]

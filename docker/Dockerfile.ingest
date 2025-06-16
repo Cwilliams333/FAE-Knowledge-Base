@@ -3,12 +3,12 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
+COPY config/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy ingest scripts
-COPY ingest.py .
-COPY ingest_wrapper.py .
+COPY app/ingest.py .
+COPY app/ingest_wrapper.py .
 
 # Make wrapper script executable
 RUN chmod +x ingest_wrapper.py

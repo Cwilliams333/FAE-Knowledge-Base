@@ -31,7 +31,7 @@ services:
   ingest:
     build:
       context: .
-      dockerfile: Dockerfile.ingest
+      dockerfile: docker/Dockerfile.ingest
     container_name: ingest-test
     environment:
       - ES_HOST=http://elasticsearch:9200
@@ -43,7 +43,7 @@ services:
       elasticsearch:
         condition: service_healthy
     volumes:
-      - ./test_documents:/app/test_documents:ro
+      - ./testing/test_documents:/app/test_documents:ro
     networks:
       - test-net
     healthcheck:
@@ -57,7 +57,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: docker/Dockerfile.backend
     container_name: backend-test
     environment:
       - ES_HOST=http://elasticsearch:9200
@@ -86,7 +86,7 @@ services:
   test-runner:
     build:
       context: .
-      dockerfile: Dockerfile.test
+      dockerfile: docker/Dockerfile.test
     container_name: test-runner
     environment:
       - TEST_ENV=docker
@@ -103,8 +103,8 @@ services:
       backend:
         condition: service_healthy
     volumes:
-      - ./tests:/app/tests:ro
-      - ./test_documents:/app/test_documents:ro
+      - ./testing/tests:/app/tests:ro
+      - ./testing/test_documents:/app/test_documents:ro
       - test_results:/app/test_results  # For test artifacts
     networks:
       - test-net

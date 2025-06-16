@@ -53,7 +53,7 @@ docker compose up --build
 ### **Option 2: Independent Document Updates**
 ```bash
 # Add new documents anytime
-cp your-new-docs/*.md documents/
+cp your-new-docs/*.md docs/documents/
 
 # Run only ingestion (backend stays running!)
 docker compose up ingest
@@ -114,40 +114,46 @@ FAE-Knowledge-Base/
 │   ├── docker-compose.yml          # Production orchestration
 │   ├── docker-compose.dev.yml      # Development setup  
 │   ├── docker-compose.test.yml     # Testing environment
-│   ├── Dockerfile.backend          # Backend API image
-│   ├── Dockerfile.ingest           # Document indexing image
-│   └── Dockerfile.test             # Testing environment image
+│   └── docker/                     # Docker images
+│       ├── Dockerfile.backend      # Backend API image
+│       ├── Dockerfile.ingest       # Document indexing image
+│       └── Dockerfile.test         # Testing environment image
 │
 ├── 🔧 Application Code
-│   ├── app.py                      # Flask backend API
-│   ├── ingest.py                   # Document indexing logic
-│   ├── ingest_wrapper.py           # Health monitoring wrapper
-│   └── test_runner.py              # Test orchestration
+│   └── app/                        # Python applications
+│       ├── app.py                  # Flask backend API
+│       ├── ingest.py               # Document indexing logic
+│       ├── ingest_wrapper.py       # Health monitoring wrapper
+│       └── test_runner.py          # Test orchestration
 │
 ├── 🧪 Testing Infrastructure  
-│   ├── tests/                      # Test suites (25+ tests)
-│   ├── test_documents/             # Sample test data
-│   ├── pytest.ini                 # Test configuration
-│   └── scripts/                    # Testing scripts
+│   └── testing/                    # Complete testing setup
+│       ├── tests/                  # Test suites (25+ tests)
+│       ├── test_documents/         # Sample test data
+│       ├── pytest.ini              # Test configuration
+│       └── scripts/                # Testing scripts
 │
 ├── 🚀 CI/CD Pipeline
 │   ├── .github/workflows/ci-cd.yml # Complete CI/CD automation
-│   └── .github/workflows/         # Additional workflows
+│   └── .github/workflows/          # Additional workflows
 │
 ├── 📊 Frontend (React + TypeScript)
-│   ├── frontend/src/               # React application  
-│   ├── frontend/components/        # UI components
-│   └── frontend/package.json       # Frontend dependencies
+│   └── frontend/                   # Complete React application
+│       ├── src/                    # React source code  
+│       ├── components/             # UI components
+│       └── package.json            # Frontend dependencies
 │
 ├── 📄 Documentation
 │   ├── README.md                   # This file
-│   ├── documents/                  # Your knowledge base content
-│   └── test_documents/             # Example documents
+│   └── docs/                       # Documentation and content
+│       ├── documents/              # Your knowledge base content
+│       └── reference/              # Additional documentation
 │
 └── ⚙️ Configuration
-    ├── requirements.txt            # Python dependencies
-    ├── requirements-dev.txt        # Development dependencies
-    └── .env.example               # Environment template
+    └── config/                     # All configuration files
+        ├── requirements.txt        # Python dependencies
+        ├── requirements-dev.txt    # Development dependencies
+        └── env.example             # Environment template
 ```
 
 ---
@@ -157,7 +163,7 @@ FAE-Knowledge-Base/
 ### **🚀 Independent Ingestion (Zero Downtime)**
 ```bash
 # Add new documents to your knowledge base
-cp new-documentation/*.md documents/
+cp new-documentation/*.md docs/documents/
 
 # Run ingestion independently (backend stays running!)
 docker compose up ingest
@@ -204,10 +210,10 @@ curl http://localhost:5000/health
 ### **🏃‍♂️ Run Tests**
 ```bash
 # Full test suite (25+ tests)
-scripts/test-new.sh
+testing/scripts/test-new.sh
 
 # Quick smoke tests
-scripts/quick-test.sh
+testing/scripts/quick-test.sh
 
 # Development testing
 docker compose -f docker-compose.test.yml up --abort-on-container-exit test-runner
@@ -324,20 +330,20 @@ docker run -d -p 9200:9200 \
   -e "xpack.security.enabled=false" \
   elasticsearch:9.0.0
 
-pip install -r requirements-dev.txt
-python ingest.py && python app.py
+pip install -r config/requirements-dev.txt
+python app/ingest.py && python app/app.py
 ```
 
 ### **🔧 Development Workflow**
 ```bash
 # 1. Add new documents
-cp new-docs/*.md documents/
+cp new-docs/*.md docs/documents/
 
 # 2. Test ingestion
 docker compose up ingest
 
 # 3. Run tests
-scripts/quick-test.sh
+testing/scripts/quick-test.sh
 
 # 4. Test full pipeline  
 docker compose -f docker-compose.test.yml up test-runner
@@ -350,10 +356,10 @@ git push origin feature/new-docs
 ### **🧪 Testing Your Changes**
 ```bash
 # Quick validation
-scripts/quick-test.sh
+testing/scripts/quick-test.sh
 
 # Full test suite
-scripts/test-new.sh  
+testing/scripts/test-new.sh  
 
 # Test specific scenarios
 docker compose -f docker-compose.test.yml up test-runner
@@ -513,7 +519,7 @@ git clone https://github.com/Cwilliams333/FAE-Knowledge-Base.git
 cd FAE-Knowledge-Base
 
 # 2. Configure production environment
-cp .env.example .env
+cp config/env.example .env
 # Edit .env with production settings
 
 # 3. Deploy with production compose
@@ -570,7 +576,7 @@ git checkout -b feature/amazing-feature
 docker compose -f docker-compose.dev.yml up --build
 
 # 4. Make your changes and test
-scripts/test-new.sh
+testing/scripts/test-new.sh
 
 # 5. Submit pull request
 git push origin feature/amazing-feature
@@ -601,7 +607,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### **🔄 Independent Ingestion**
 Unlike traditional monolithic setups, you can update your knowledge base **without any downtime**:
 ```bash
-cp new-docs/*.md documents/
+cp new-docs/*.md docs/documents/
 docker compose up ingest  # Backend stays running!
 ```
 
