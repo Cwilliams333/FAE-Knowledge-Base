@@ -9,7 +9,7 @@
 
 **Enterprise-ready microservices knowledge base** with independent document ingestion, comprehensive testing, and automated CI/CD deployment.
 
-![Knowledge Base Interface](2FAEfrontend.gif)
+![Knowledge Base Interface](docs/2FAEfrontend.gif)
 
 ## 🎯 **What's New in Microservices Edition**
 
